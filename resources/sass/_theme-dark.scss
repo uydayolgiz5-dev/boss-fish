@@ -1,0 +1,334 @@
+// ============================================================
+// Tungi rejim — faqat ranglar (o‘lcham/padding o‘zgarmaydi)
+// ============================================================
+
+html[data-theme='dark'],
+html[data-theme='dark'] body {
+  color-scheme: dark;
+  background: #0b1220;
+  color: #e5e7eb;
+}
+
+html[data-theme='dark'] {
+  .app-root.crm-app {
+    background: #0b1220;
+    color: #e5e7eb;
+  }
+
+  .app-root.crm-app .owner-sidebar {
+    background: #111827;
+    color: #e5e7eb;
+    border-right-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .app-root.crm-app .owner-sidebar nav a {
+    color: #cbd5e1;
+
+    &.router-link-active,
+    &:hover {
+      background: rgba(71, 194, 105, 0.14);
+      color: #86efac;
+    }
+  }
+
+  .app-root.crm-app .sidebar-foot,
+  .app-root.crm-app .user-chip {
+    color: #cbd5e1;
+  }
+
+  .app-root.crm-app .user-chip span {
+    color: #94a3b8;
+  }
+
+  .app-root.crm-app .main {
+    background: #0b1220;
+    color: #e5e7eb;
+  }
+
+  .app-root.crm-app .crm-topbar {
+    background: rgba(17, 24, 39, 0.94);
+    border-bottom-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .app-root.crm-app .crm-topbar__title {
+    color: #f3f4f6;
+  }
+
+  .app-root.crm-app .crm-topbar__subtitle {
+    color: #94a3b8;
+  }
+
+  .app-root.crm-app .crm-topbar-bell,
+  .app-root.crm-app .crm-topbar-settings,
+  .app-root.crm-app .language-button,
+  .app-root.crm-app .sidebar-logout-mobile,
+  .app-root.crm-app .sidebar-logout-desktop,
+  .app-root.crm-app .sidebar-settings-desktop {
+    background: #1f2937;
+    border-color: rgba(148, 163, 184, 0.28);
+    color: #e5e7eb;
+  }
+
+  .app-root.crm-app .language-menu {
+    background: #1f2937;
+    border-color: rgba(148, 163, 184, 0.28);
+
+    button {
+      color: #e5e7eb;
+
+      &:hover,
+      &.active {
+        background: rgba(71, 194, 105, 0.16);
+        color: #86efac;
+      }
+    }
+  }
+
+  .app-root.crm-app .crm-topbar-alerts__panel,
+  .app-root.crm-app .crm-topbar-alerts__head {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+
+  .app-root.crm-app .crm-topbar-alerts__empty,
+  .app-root.crm-app .crm-topbar-alert__detail {
+    color: #94a3b8;
+  }
+
+  // —— Yuzalar: ranggina ——
+  .panel,
+  .page .panel,
+  .employee-card,
+  .employee-empty,
+  .dir-kpi,
+  .dir-dash__panel,
+  .settings-link,
+  .settings-link.theme-panel,
+  .theme-panel,
+  .action-card,
+  .record-card,
+  .finance-simple-report-card,
+  .form-section-block,
+  .report-form-panel,
+  .warehouse-intake-panel,
+  .warehouse-intake-block,
+  .finance-quick-entry,
+  .farm-hub-card,
+  .branch-card,
+  .pond-pick {
+    background-color: #111827 !important;
+    border-color: rgba(148, 163, 184, 0.22) !important;
+    color: #e5e7eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  .dir-quick {
+    background-color: #1f2937 !important;
+    border-color: rgba(148, 163, 184, 0.28) !important;
+    color: #e5e7eb;
+
+    strong {
+      color: #f3f4f6 !important;
+    }
+
+    span {
+      color: #94a3b8 !important;
+    }
+
+    &:hover:not(:disabled) {
+      background-color: rgba(71, 194, 105, 0.16) !important;
+      border-color: rgba(71, 194, 105, 0.45) !important;
+    }
+  }
+
+  .dir-dash__quiet,
+  .dir-kpi__label,
+  .dir-kpi__meta,
+  .muted,
+  .field-hint,
+  .page-head .muted,
+  .settings-link span,
+  .employee-card__creds dt,
+  .employee-card__roles-label,
+  .dir-dash__panel .panel-head small {
+    color: #94a3b8 !important;
+  }
+
+  .page-head h1,
+  .page-head__context,
+  .settings-section-title,
+  .employee-card__title-row strong,
+  .dir-kpi__value,
+  .action-card__body h3,
+  .settings-link strong,
+  .dir-dash__panel .panel-head h2,
+  .panel h2,
+  .panel h3 {
+    color: #f3f4f6 !important;
+  }
+
+  .dir-kpi--sales .dir-kpi__value,
+  .dir-kpi--profit .dir-kpi__value {
+    color: #4ade80 !important;
+  }
+
+  .dir-kpi--expense .dir-kpi__value {
+    color: #fb923c !important;
+  }
+
+  .dir-kpi--loss .dir-kpi__value {
+    color: #f87171 !important;
+  }
+
+  .field label,
+  label {
+    color: #cbd5e1;
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='button']):not([type='submit']),
+  textarea,
+  select,
+  .formatted-number-input input {
+    background-color: #0b1220 !important;
+    border-color: rgba(148, 163, 184, 0.28) !important;
+    color: #f3f4f6 !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #64748b !important;
+  }
+
+  .btn-outline {
+    background-color: #1f2937;
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #e5e7eb;
+
+    &:hover:not(:disabled) {
+      background-color: #273449;
+      border-color: rgba(148, 163, 184, 0.5);
+    }
+  }
+
+  .btn-primary {
+    box-shadow: none;
+  }
+
+  .modal {
+    background-color: #111827;
+    border-color: rgba(148, 163, 184, 0.22);
+    color: #e5e7eb;
+  }
+
+  .modal-title {
+    color: #f3f4f6;
+  }
+
+  .modal-footer {
+    background-color: #111827;
+    border-top-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .modal-backdrop {
+    background: rgba(2, 6, 23, 0.72);
+  }
+
+  .empty,
+  .error {
+    color: #fca5a5;
+  }
+
+  .success-hint {
+    color: #6ee7b7 !important;
+  }
+
+  .perm-item {
+    background-color: #0b1220 !important;
+    border-color: rgba(148, 163, 184, 0.28) !important;
+  }
+
+  .perm-item.is-on {
+    background-color: rgba(15, 118, 110, 0.22) !important;
+    border-color: #14b8a6 !important;
+  }
+
+  .perm-item__body strong {
+    color: #f3f4f6 !important;
+  }
+
+  .employee-form-actions {
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0), #111827 28%) !important;
+  }
+
+  .roles-count {
+    background-color: rgba(15, 118, 110, 0.2);
+    border-color: rgba(45, 212, 191, 0.35);
+    color: #5eead4;
+  }
+
+  .employee-card__perms li {
+    background-color: rgba(15, 118, 110, 0.2);
+    border-color: rgba(45, 212, 191, 0.3);
+    color: #99f6e4;
+  }
+
+  .employee-card__on {
+    background-color: rgba(16, 185, 129, 0.18);
+    color: #6ee7b7;
+  }
+
+  .employee-card__off {
+    background-color: rgba(239, 68, 68, 0.16);
+    color: #fca5a5;
+  }
+
+  .theme-choice {
+    background-color: #0b1220;
+    border-color: rgba(148, 163, 184, 0.28);
+    color: #e5e7eb;
+
+    span:last-child {
+      color: #94a3b8;
+    }
+
+    &.is-active {
+      border-color: #47c269;
+      background-color: rgba(71, 194, 105, 0.14);
+      color: #86efac;
+    }
+  }
+
+  .sidebar-top {
+    background: rgba(17, 24, 39, 0.97) !important;
+    border-bottom-color: rgba(148, 163, 184, 0.18) !important;
+  }
+
+  .owner-sidebar nav {
+    background: #111827 !important;
+    border-top-color: rgba(148, 163, 184, 0.2) !important;
+  }
+
+  .finance-report-top,
+  .finance-back,
+  .finance-report-hero,
+  .finance-row,
+  .table,
+  table {
+    color: #e5e7eb;
+  }
+
+  table th,
+  table td {
+    border-color: rgba(148, 163, 184, 0.16) !important;
+  }
+
+  table thead th {
+    background-color: #1f2937 !important;
+    color: #cbd5e1 !important;
+  }
+
+  table tbody tr:nth-child(even) {
+    background-color: rgba(31, 41, 55, 0.45);
+  }
+}

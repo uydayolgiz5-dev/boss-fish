@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shartnoma tuzish shartlari — BOSS FISH</title>
+  <style>
+    :root {
+      --ink: #0b1f16;
+      --muted: #475569;
+      --line: #e2e8f0;
+      --paper: #fffcf7;
+      --green: #128a4a;
+      --green-soft: #ecf8f0;
+      --warn: #9a3412;
+      --warn-bg: #fff7ed;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #eef2ef;
+      color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
+      line-height: 1.55;
+    }
+    .page {
+      max-width: 760px;
+      margin: 2rem auto;
+      padding: 2.4rem 2.2rem 2.6rem;
+      background: var(--paper);
+      border: 1px solid #d9e0d8;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
+    }
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      padding-bottom: 1.1rem;
+      border-bottom: 2px solid var(--ink);
+    }
+    .brand small {
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--green);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    h1 {
+      margin: 0.25rem 0 0;
+      font-size: 1.85rem;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+    .meta {
+      margin: 1rem 0 0;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+    .meta p { margin: 0.2rem 0; }
+    h2 {
+      margin: 1.65rem 0 0.55rem;
+      font-size: 1.08rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--green);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    p, li { font-size: 1.02rem; }
+    p { margin: 0.4rem 0; }
+    ul { margin: 0.35rem 0 0.5rem; padding-left: 1.2rem; }
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+      margin-top: 0.7rem;
+    }
+    .card {
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+    .card strong { display: block; margin-bottom: 0.35rem; }
+    .warn {
+      margin: 0.8rem 0;
+      padding: 0.95rem 1.05rem;
+      background: var(--warn-bg);
+      border-left: 4px solid var(--warn);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6rem 0 0.8rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 0.55rem 0.7rem;
+      text-align: left;
+    }
+    th { background: var(--green-soft); }
+    .sign {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 1.8rem;
+      font-size: 0.95rem;
+    }
+    .sign .line {
+      margin-top: 2.2rem;
+      border-top: 1px solid var(--ink);
+      padding-top: 0.35rem;
+    }
+    .toolbar {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: flex-end;
+      max-width: 760px;
+      margin: 1.2rem auto 0;
+      padding: 0 0.5rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .toolbar a, .toolbar button {
+      appearance: none;
+      border: 0;
+      background: var(--ink);
+      color: #fff;
+      padding: 0.55rem 0.95rem;
+      border-radius: 10px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+    .toolbar a.ghost, .toolbar button.ghost {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid #cbd5e1;
+    }
+    @media (max-width: 700px) {
+      .page { margin: 0; border: 0; box-shadow: none; padding: 1.4rem 1.1rem 2rem; }
+      .split, .sign { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none; }
+      .page { margin: 0; box-shadow: none; border: 0; max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <a class="ghost" href="/">Saytga qaytish</a>
+    <button type="button" onclick="window.print()">Chop etish / PDF</button>
+  </div>
+  <article class="page">
+    <header class="brand">
+      <div>
+        <small>BOSS FISH BBT</small>
+        <h1>Shartnoma tuzish shartlari</h1>
+      </div>
+      <div class="meta">
+        <p>Standart va Premium</p>
+        <p>Tel: +998 77 444 2525</p>
+      </div>
+    </header>
+
+    <p class="meta">Shartnoma № ________ &nbsp;·&nbsp; Sana: «____» ____________ 20____ yil</p>
+    <p><strong>Ijrochi:</strong> _______________________________</p>
+    <p><strong>Buyurtmachi:</strong> _______________________________</p>
+    <p><strong>Tarif:</strong> ☐ Standart &nbsp;&nbsp; ☐ Premium &nbsp;&nbsp; <strong>Havza:</strong> ____________________</p>
+
+    <h2>1. Nima beriladi</h2>
+    <p><strong>Standart.</strong> Sayt (kabinet) ochiladi. To‘lovdan keyin Ijrochi videolar va qisqa yo‘riqnoma bilan ishlatishni o‘rgatadi.</p>
+    <p><strong>Premium.</strong> Standart + har hafta Ijrochi nazorat qiladi, telefon yoki Telegram orqali so‘raydi, yopiq guruh va mutaxassis maslahati.</p>
+    <p>O‘rganish va <strong>har kuni saytni ishlatish</strong> — Buyurtmachining vazifasi.</p>
+
+    <h2>2. Kim nima qiladi</h2>
+    <div class="split">
+      <div class="card">
+        <strong>Ijrochi qiladi</strong>
+        <ul>
+          <li>Kabinetni ochadi, video va yo‘riqnoma beradi.</li>
+          <li>Tizim ishlamasa — tuzatadi.</li>
+          <li>Premiumda: har hafta tekshiradi va Buyurtmachidan ishni talab qiladi.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Buyurtmachi qiladi</strong>
+        <ul>
+          <li>Videolarni ko‘radi, kabinetni o‘zi ishlatadi.</li>
+          <li>Yem, suv, baliq, xarajatni o‘z vaqtida yozadi.</li>
+          <li>Ijrochi aytgan ishni o‘zi bajaradi (boqish, suv, dori, hodim).</li>
+        </ul>
+      </div>
+    </div>
+    <p>Ijrochi o‘rniga havzada ishlamaydi. Qilinadigan ish Buyurtmachiga yuklatiladi.</p>
+
+    <h2>3. Ishlatmasa</h2>
+    <div class="warn">
+      <p>Agar Buyurtmachi saytni ishlatmasa, havzada nima bo‘layotganini <strong>bilmaydi</strong>. Ijrochi ham to‘g‘ri maslahat bera olmaydi. <strong>To‘lov qaytarilmaydi.</strong></p>
+      <p>Pul tizim va xizmat uchun olingan. Ishlatmaslik — Ijrochi aybi emas.</p>
+    </div>
+
+    <h2>4. Narx</h2>
+    <table>
+      <thead>
+        <tr><th>Tarif</th><th>Oyiga</th><th>Yillik (−20%)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Standart</td><td>135 000 so‘m</td><td>1 299 000 so‘m</td></tr>
+        <tr><td>Premium</td><td>450 000 so‘m</td><td>4 320 000 so‘m</td></tr>
+      </tbody>
+    </table>
+    <p>To‘lov: ☐ yillik &nbsp; ☐ boshqa: __________</p>
+    <p>To‘lov tushgach xizmat boshlanadi. 10 kundan oshiq kechiksa kabinet yopilishi mumkin.</p>
+
+    <h2>5. Qisqa qoidalar</h2>
+    <ul>
+      <li>Natija (kg, foyda) kafolatlanmaydi — havza, yem, ob-havo va Buyurtmachi ishiga bog‘liq.</li>
+      <li>Premium nazorati masofadan. Havzaga borish bu shartnomada yo‘q.</li>
+      <li>Muddat to‘lovga qarab. Oldindan to‘langan pul ishlatilmasa ham qaytmaydi.</li>
+      <li>Nizo bo‘lsa, avval gaplashiladi, keyin O‘zbekiston qonunlari bo‘yicha.</li>
+    </ul>
+
+    <p><strong>Buyurtmachi:</strong> Men o‘qidim. Saytni o‘zim ishlataman. Ishlatmasam, holatni bilmasligimni va pul qaytmasligini tushunaman.</p>
+
+    <div class="sign">
+      <div>
+        <div class="line">Ijrochi, imzo / M.O‘.</div>
+      </div>
+      <div>
+        <div class="line">Buyurtmachi, imzo / M.O‘. &nbsp; sana: __________</div>
+      </div>
+    </div>
+  </article>
+</body>
+</html>
