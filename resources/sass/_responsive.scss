@@ -399,12 +399,8 @@ html {
     display: none !important;
   }
 
-  body.is-keyboard-open .main,
-  body.is-keyboard-open .app-root.crm-app .main,
-  body.is-keyboard-open .app-root.with-owner-nav > .main {
-    /* Katta inset sahifani «uzoqlashtirib» sakratadi — yengil bo‘shliq yetadi */
-    padding-bottom: calc(1rem + min(var(--keyboard-inset, 0px), 96px)) !important;
-  }
+  /* Forma sahifalarida keyboard padding — kartalarni cho‘zadi, o‘chirilgan.
+     Chat/modal alohida qoidalarda qoladi. */
 
   /* Instagram chat: sahifa sakramasin — faqat thread scroll, shell keyboard ustida */
   body.is-chat-keyboard {
@@ -490,33 +486,8 @@ html {
     scroll-margin-bottom: 5rem;
   }
 
-  body.is-keyboard-open .report-form-panel,
-  body.is-keyboard-open .warehouse-intake-panel,
-  body.is-keyboard-open .warehouse-intake-block,
-  body.is-keyboard-open .finance-quick-entry,
-  body.is-keyboard-open .form-section-blocks,
-  body.is-keyboard-open .form-section-block,
-  body.is-keyboard-open .fishery-form,
-  body.is-keyboard-open .sale-loss-form-panel,
-  body.is-keyboard-open .sale-loss-form,
-  body.is-keyboard-open .os-panel,
-  body.is-keyboard-open .panel form,
-  body.is-keyboard-open form.panel,
-  body.is-keyboard-open .venger-form,
-  body.is-keyboard-open .auth-card {
-    padding-bottom: 1.25rem !important;
-  }
-
-  body.is-keyboard-open .actions,
-  body.is-keyboard-open .os-actions,
-  body.is-keyboard-open .finance-quick-save,
-  body.is-keyboard-open .wizard-nav {
-    position: sticky;
-    bottom: 0.35rem;
-    z-index: 6;
-    background: #fff;
-    padding-top: 0.4rem;
-  }
+  /* Hisobot/ombor/moliya kartalariga keyboard padding QO‘YILMAYDI —
+     har bir .form-section-block cho‘zilib bo‘sh joy ochardi. */
 
   /* Modal footer tugmalari sticky bo‘lmasin — input ustiga chiqib ketmasin */
   body.is-keyboard-open .modal-footer .actions,

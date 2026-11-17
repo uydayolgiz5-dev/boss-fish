@@ -34,19 +34,19 @@ function applyKeyboardState() {
   if (typeof document === 'undefined') return;
   const active = document.activeElement;
   const fieldOpen = isKeyboardField(active);
+  const chatOpen = fieldOpen && isChatComposerField(active);
   const cover = keyboardCoverPx();
-  const open = fieldOpen || cover > 80;
-  const chatOpen = open && isChatComposerField(active);
 
-  // Forma: faqat haqiqiy cover — katta fallback inset sakratadi
+  // Forma sahifalarida body class / inset YO‘Q — kartalar cho‘zilmasin.
+  // Faqat chat composer uchun keyboard layout.
   let inset = 0;
   if (chatOpen) {
-    inset = cover > 40 ? cover : Math.round(Math.min(Math.max((window.innerHeight || 0) * 0.38, 220), 380));
-  } else if (open && cover > 40) {
-    inset = cover;
+    inset = cover > 40
+      ? cover
+      : Math.round(Math.min(Math.max((window.innerHeight || 0) * 0.38, 220), 380));
   }
 
-  document.body.classList.toggle('is-keyboard-open', open);
+  document.body.classList.toggle('is-keyboard-open', chatOpen);
   document.body.classList.toggle('is-chat-keyboard', chatOpen);
   document.documentElement.style.setProperty('--keyboard-inset', `${inset}px`);
 
@@ -57,26 +57,10 @@ function applyKeyboardState() {
   }
 }
 
-function scrollFocusedField() {
-  const el = document.activeElement;
-  if (!isKeyboardField(el) || typeof el.scrollIntoView !== 'function') return;
-  if (isChatComposerField(el)) return;
-
-  const vv = window.visualViewport;
-  const rect = el.getBoundingClientRect();
-  const top = vv ? vv.offsetTop + 12 : 12;
-  const bottom = vv ? vv.offsetTop + vv.height - 24 : window.innerHeight - 24;
-  if (rect.top >= top && rect.bottom <= bottom) return;
-
-  // center/smooth — iOS da tepaga-pastga sakraydi
-  el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
-}
-
 export function installMobileKeyboard() {
   if (typeof window === 'undefined') return () => {};
 
   let blurTimer = null;
-  let scrollTimer = null;
   let syncTimer = null;
 
   const sync = () => {
@@ -93,9 +77,7 @@ export function installMobileKeyboard() {
       blurTimer = null;
     }
     applyKeyboardState();
-    if (scrollTimer) clearTimeout(scrollTimer);
-    // Bir marta, klaviatura ochilgach — qayta-qayta scroll qilmaymiz
-    scrollTimer = window.setTimeout(scrollFocusedField, 320);
+    // Forma: scrollIntoView qilinmaydi — iOS/Chrome o‘zi ko‘rsatadi, qo‘shimcha sakrash yo‘q
   };
 
   const onFocusOut = () => {
@@ -111,7 +93,6 @@ export function installMobileKeyboard() {
 
   const vv = window.visualViewport;
   if (vv) {
-    // scroll — iOS viewport surganda inset o‘zgarib sakraydi; faqat resize
     vv.addEventListener('resize', sync);
   }
 
@@ -126,7 +107,6 @@ export function installMobileKeyboard() {
       vv.removeEventListener('resize', sync);
     }
     if (blurTimer) clearTimeout(blurTimer);
-    if (scrollTimer) clearTimeout(scrollTimer);
     if (syncTimer) clearTimeout(syncTimer);
     document.body.classList.remove('is-keyboard-open');
     document.body.classList.remove('is-chat-keyboard');
