@@ -402,7 +402,8 @@ html {
   body.is-keyboard-open .main,
   body.is-keyboard-open .app-root.crm-app .main,
   body.is-keyboard-open .app-root.with-owner-nav > .main {
-    padding-bottom: calc(1.25rem + var(--keyboard-inset, 0px)) !important;
+    /* Katta inset sahifani «uzoqlashtirib» sakratadi — yengil bo‘shliq yetadi */
+    padding-bottom: calc(1rem + min(var(--keyboard-inset, 0px), 96px)) !important;
   }
 
   /* Instagram chat: sahifa sakramasin — faqat thread scroll, shell keyboard ustida */
@@ -480,11 +481,13 @@ html {
     padding-bottom: 1.15rem;
   }
 
+  /* iOS zoom: input < 16px bo‘lsa fokusni kattalashtiradi */
   input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='button']):not([type='submit']),
   textarea,
   select {
-    scroll-margin-top: 5.5rem;
-    scroll-margin-bottom: calc(var(--keyboard-inset, 0px) + 4.5rem);
+    font-size: 16px !important;
+    scroll-margin-top: 4.5rem;
+    scroll-margin-bottom: 5rem;
   }
 
   body.is-keyboard-open .report-form-panel,
@@ -501,7 +504,7 @@ html {
   body.is-keyboard-open form.panel,
   body.is-keyboard-open .venger-form,
   body.is-keyboard-open .auth-card {
-    padding-bottom: calc(1.5rem + var(--keyboard-inset, 0px)) !important;
+    padding-bottom: 1.25rem !important;
   }
 
   body.is-keyboard-open .actions,
@@ -509,7 +512,7 @@ html {
   body.is-keyboard-open .finance-quick-save,
   body.is-keyboard-open .wizard-nav {
     position: sticky;
-    bottom: calc(0.35rem + var(--keyboard-inset, 0px));
+    bottom: 0.35rem;
     z-index: 6;
     background: #fff;
     padding-top: 0.4rem;
@@ -1339,6 +1342,13 @@ html {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
+  }
+
+  /* Sensorli qurilma: iOS input zoom oldini olish */
+  input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='button']):not([type='submit']),
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 
   .field input,
