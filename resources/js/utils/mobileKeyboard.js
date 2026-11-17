@@ -34,19 +34,24 @@ function applyKeyboardState() {
   if (typeof document === 'undefined') return;
   const active = document.activeElement;
   const fieldOpen = isKeyboardField(active);
-  const chatOpen = fieldOpen && isChatComposerField(active);
   const cover = keyboardCoverPx();
+  const open = fieldOpen || cover > 80;
+  const chatOpen = open && isChatComposerField(active);
 
-  // Forma sahifalarida body class / inset YO‘Q — kartalar cho‘zilmasin.
-  // Faqat chat composer uchun keyboard layout.
+  // Forma: inset faqat o‘zgaruvchi (scroll-margin) — kartalarga padding YO‘Q
   let inset = 0;
   if (chatOpen) {
     inset = cover > 40
       ? cover
       : Math.round(Math.min(Math.max((window.innerHeight || 0) * 0.38, 220), 380));
+  } else if (open && cover > 40) {
+    inset = cover;
+  } else if (open) {
+    // DevTools/klaviatura o‘lchami aniq bo‘lmasa — pastki nav yashirinadi
+    inset = 0;
   }
 
-  document.body.classList.toggle('is-keyboard-open', chatOpen);
+  document.body.classList.toggle('is-keyboard-open', open);
   document.body.classList.toggle('is-chat-keyboard', chatOpen);
   document.documentElement.style.setProperty('--keyboard-inset', `${inset}px`);
 
@@ -57,17 +62,43 @@ function applyKeyboardState() {
   }
 }
 
+/** Fokuslangan maydonni klaviatura ustida ko‘rinadigan qilib suradi (kartani cho‘zmaydi). */
+function revealFocusedField() {
+  const el = document.activeElement;
+  if (!isKeyboardField(el) || isChatComposerField(el)) return;
+
+  const vv = window.visualViewport;
+  const rect = el.getBoundingClientRect();
+  const headerPad = 72;
+  const bottomPad = 28;
+  const viewTop = vv ? vv.offsetTop + headerPad : headerPad;
+  const viewBottom = vv ? vv.offsetTop + vv.height - bottomPad : window.innerHeight - bottomPad;
+
+  if (rect.top >= viewTop && rect.bottom <= viewBottom) return;
+
+  // Maydonni visual viewport o‘rtasiga yaqinlashtiramiz
+  const targetY = viewTop + (viewBottom - viewTop) * 0.35;
+  const delta = rect.top - targetY;
+  if (Math.abs(delta) < 8) return;
+
+  window.scrollBy({ top: delta, left: 0, behavior: 'auto' });
+}
+
 export function installMobileKeyboard() {
   if (typeof window === 'undefined') return () => {};
 
   let blurTimer = null;
   let syncTimer = null;
+  let revealTimer = null;
 
   const sync = () => {
     if (syncTimer) clearTimeout(syncTimer);
     syncTimer = window.setTimeout(() => {
       applyKeyboardState();
-    }, 50);
+      if (isKeyboardField(document.activeElement) && !isChatComposerField(document.activeElement)) {
+        revealFocusedField();
+      }
+    }, 40);
   };
 
   const onFocusIn = (event) => {
@@ -77,7 +108,10 @@ export function installMobileKeyboard() {
       blurTimer = null;
     }
     applyKeyboardState();
-    // Forma: scrollIntoView qilinmaydi — iOS/Chrome o‘zi ko‘rsatadi, qo‘shimcha sakrash yo‘q
+    if (revealTimer) clearTimeout(revealTimer);
+    // Klaviatura ochilgach bir-ikki marta — cho‘zilmasdan yuqoriga
+    revealTimer = window.setTimeout(revealFocusedField, 80);
+    window.setTimeout(revealFocusedField, 280);
   };
 
   const onFocusOut = () => {
@@ -108,6 +142,7 @@ export function installMobileKeyboard() {
     }
     if (blurTimer) clearTimeout(blurTimer);
     if (syncTimer) clearTimeout(syncTimer);
+    if (revealTimer) clearTimeout(revealTimer);
     document.body.classList.remove('is-keyboard-open');
     document.body.classList.remove('is-chat-keyboard');
     document.documentElement.style.removeProperty('--keyboard-inset');

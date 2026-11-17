@@ -486,6 +486,17 @@ html {
     scroll-margin-bottom: 5rem;
   }
 
+  body.is-keyboard-open input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='button']):not([type='submit']),
+  body.is-keyboard-open textarea,
+  body.is-keyboard-open select {
+    scroll-margin-bottom: calc(1.5rem + var(--keyboard-inset, 0px));
+  }
+
+  /* Pastki menyu klaviatura ustida maydonni yopmasin */
+  body.is-keyboard-open .owner-sidebar {
+    pointer-events: none;
+  }
+
   /* Hisobot/ombor/moliya kartalariga keyboard padding QO‘YILMAYDI —
      har bir .form-section-block cho‘zilib bo‘sh joy ochardi. */
 
