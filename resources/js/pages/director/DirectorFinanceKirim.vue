@@ -133,6 +133,7 @@ import {
   financeCategoryLabel as labelCategory,
   isFinanceManualEntryCategory,
   isWarehouseFinanceCategory,
+  toApiCategory,
   toRouteCategory,
 } from '../../utils/finance';
 import { formatMoney } from '../../utils/number';
@@ -181,8 +182,15 @@ export default {
         recentEntries.value = [];
         return;
       }
+      // Bo‘lim tanlanmaguncha ro‘yxatni ko‘rsatmaymiz — chalkashlik bo‘lmasin
+      if (!entryCategory.value) {
+        recentEntries.value = [];
+        return;
+      }
       try {
-        const { data } = await window.axios.get(`/director/farms/${farmId.value}/finance/expenses`);
+        const { data } = await window.axios.get(`/director/farms/${farmId.value}/finance/expenses`, {
+          params: { category: toApiCategory(entryCategory.value) },
+        });
         recentEntries.value = (data.data || [])
           .filter((row) => !WAREHOUSE_CATEGORIES.has(row.category) && !row.allocated_from_farm)
           .slice(0, 8);
@@ -327,11 +335,18 @@ export default {
     }
 
     watch(() => route.query.entry, (value) => {
-      if (!value || loading.value || !scopeReady.value) return;
+      if (!value || loading.value || !scopeReady.value) {
+        if (!value) entryCategory.value = '';
+        return;
+      }
       const sectionIds = (overview.value.custom_sections || []).map((section) => section.id);
       if (isFinanceManualEntryCategory(String(value), sectionIds)) {
         entryCategory.value = String(value);
       }
+    });
+
+    watch(entryCategory, () => {
+      loadRecent();
     });
 
     onMounted(load);
