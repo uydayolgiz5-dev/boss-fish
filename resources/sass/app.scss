@@ -2225,10 +2225,28 @@ button { touch-action: manipulation; }
     white-space: nowrap;
   }
 
-  td:nth-child(7) {
+  .finance-col-focus {
+    background: rgba(46, 125, 50, 0.07);
+    font-weight: 700;
+    color: $ink;
+  }
+
+  thead .finance-col-focus {
+    background: rgba(46, 125, 50, 0.14);
+    color: $green-deep;
+  }
+
+  .finance-col-sum {
+    font-size: 1.05em;
+    color: $green-deep;
+  }
+
+  .finance-col-notes {
     white-space: normal;
     min-width: 8rem;
     max-width: 14rem;
+    font-weight: 400;
+    color: $muted;
   }
 
   tfoot td {

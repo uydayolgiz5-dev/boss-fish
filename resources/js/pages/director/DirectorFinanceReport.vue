@@ -25,11 +25,11 @@
               <tr>
                 <th>{{ $t('date') }}</th>
                 <th>{{ $t('financeExpenseName') }}</th>
-                <th>{{ $t('pond') }}</th>
-                <th>{{ $t('financeQuantity') }}</th>
-                <th>{{ $t('financeUnitPrice') }}</th>
-                <th>{{ $t('amount') }}</th>
+                <th class="finance-col-focus">{{ $t('financeQuantity') }}</th>
+                <th class="finance-col-focus">{{ $t('financeUnitPrice') }}</th>
+                <th class="finance-col-focus">{{ $t('amount') }}</th>
                 <th>{{ $t('financeEnteredBy') }}</th>
+                <th>{{ $t('pond') }}</th>
                 <th>{{ $t('notes') }}</th>
                 <th />
               </tr>
@@ -41,12 +41,12 @@
                   <strong>{{ row.title }}</strong>
                   <small v-if="row.allocated_from_farm" class="finance-alloc-badge">{{ allocBadge(row) }}</small>
                 </td>
-                <td>{{ row.pond?.name || $t('financeScopeAllPondsShort') }}</td>
-                <td class="num">{{ row.quantity != null ? formatQty(row.quantity) : '—' }}</td>
-                <td class="num">{{ row.unit_price != null ? formatMoney(row.unit_price) : '—' }}</td>
-                <td class="num"><strong>{{ formatMoney(row.amount) }}</strong></td>
+                <td class="num finance-col-focus">{{ row.quantity != null ? formatQty(row.quantity) : '—' }}</td>
+                <td class="num finance-col-focus">{{ row.unit_price != null ? formatMoney(row.unit_price) : '—' }}</td>
+                <td class="num finance-col-focus finance-col-sum"><strong>{{ formatMoney(row.amount) }}</strong></td>
                 <td>{{ row.user?.name || '—' }}</td>
-                <td>{{ row.description || '—' }}</td>
+                <td>{{ row.pond?.name || $t('financeScopeAllPondsShort') }}</td>
+                <td class="finance-col-notes">{{ row.description || '—' }}</td>
                 <td class="finance-row-actions">
                   <template v-if="canMutateRow(row)">
                     <router-link
@@ -69,9 +69,9 @@
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="5"><strong>{{ $t('financeCategoryTotal') }}</strong></td>
-                <td class="num"><strong>{{ formatMoney(categoryTotal) }}</strong></td>
-                <td colspan="3" />
+                <td colspan="4"><strong>{{ $t('financeCategoryTotal') }}</strong></td>
+                <td class="num finance-col-focus finance-col-sum"><strong>{{ formatMoney(categoryTotal) }}</strong></td>
+                <td colspan="4" />
               </tr>
             </tfoot>
           </table>
@@ -162,7 +162,13 @@ export default {
         const entriesRes = await window.axios.get(`/director/farms/${farmId.value}/finance/expenses`, {
           params: expenseParams,
         });
-        entries.value = entriesRes.data.data || [];
+        // Eng eski yuqorida — o‘qish yuqoridan pastga
+        entries.value = [...(entriesRes.data.data || [])].sort((a, b) => {
+          const da = String(a.expense_date || '');
+          const db = String(b.expense_date || '');
+          if (da !== db) return da.localeCompare(db);
+          return Number(a.id || 0) - Number(b.id || 0);
+        });
         categoryTotal.value = entriesRes.data.category_total || 0;
         financeLocked.value = !!entriesRes.data.finance_locked;
       } finally {
