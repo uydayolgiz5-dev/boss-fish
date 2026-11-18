@@ -47,15 +47,29 @@
       </section>
 
       <template v-if="plan">
-        <section class="panel vfp-totals">
-          <h2>{{ $t('vengerFeedPlanSummary', { year: plan.year }) }}</h2>
+        <section class="panel vfp-report">
+          <div class="vfp-report__head">
+            <div>
+              <p class="vfp-report__eyebrow">VENGER CARP</p>
+              <h2>{{ $t('vengerFeedPlanOfficialTitle', { year: plan.year }) }}</h2>
+              <p class="muted">{{ $t('vengerFeedPlanSummary', { year: plan.year }) }}</p>
+            </div>
+            <button
+              class="btn btn-outline"
+              type="button"
+              :disabled="exportingExcel || !plan.rows.length"
+              @click="exportExcel"
+            >
+              {{ exportingExcel ? $t('exportingExcel') : $t('exportExcel') }}
+            </button>
+          </div>
           <div class="vfp-totals__grid">
             <div><span>{{ $t('vengerFeedPlanTotalClients') }}</span><strong>{{ plan.totals.clients_count }}</strong></div>
-            <div><span>{{ $t('vengerFeedPlanTotalArea') }}</span><strong>{{ fmtNum(plan.totals.pond_area_ha, 2) }} ha</strong></div>
-            <div><span>{{ $t('vengerFeedPlanTotalLastFeed') }}</span><strong>{{ fmtNum(plan.totals.last_year_feed_kg, 2) }} t</strong></div>
+            <div><span>{{ $t('vengerFeedPlanTotalArea') }}</span><strong>{{ fmtNum(plan.totals.pond_area_ha, 2) }}</strong></div>
+            <div><span>{{ $t('vengerFeedPlanTotalLastFeed') }}</span><strong>{{ fmtNum(plan.totals.last_year_feed_kg, 2) }}</strong></div>
             <div><span>{{ $t('vengerFeedPlanTotalCarp') }}</span><strong>{{ fmtNum(plan.totals.next_year_carp_count, 0) }}</strong></div>
-            <div><span>{{ $t('vengerFeedPlanTotalExtruder') }}</span><strong>{{ fmtNum(plan.totals.next_year_extruder_kg, 2) }} t</strong></div>
-            <div><span>{{ $t('vengerFeedPlanTotalGranule') }}</span><strong>{{ fmtNum(plan.totals.next_year_granule_kg, 2) }} t</strong></div>
+            <div><span>{{ $t('vengerFeedPlanTotalExtruder') }}</span><strong>{{ fmtNum(plan.totals.next_year_extruder_kg, 2) }}</strong></div>
+            <div><span>{{ $t('vengerFeedPlanTotalGranule') }}</span><strong>{{ fmtNum(plan.totals.next_year_granule_kg, 2) }}</strong></div>
           </div>
         </section>
 
@@ -248,6 +262,13 @@ import auth from '../../auth';
 import { showSaved } from '../../flash';
 import { formatPhoneDisplay, isCompletePhone } from '../../utils/phone';
 import { formatNumber } from '../../utils/number';
+import {
+  downloadExcelWorkbook,
+  excelBlankRow,
+  excelCell,
+  excelDateStamp,
+  excelMoney,
+} from '../../utils/exportExcel';
 import { t } from '../../i18n';
 
 function emptyDraft() {
@@ -278,6 +299,7 @@ export default {
     const newYear = ref(new Date().getFullYear() + 1);
     const creating = ref(false);
     const savingRow = ref(false);
+    const exportingExcel = ref(false);
     const rowError = ref('');
     const draft = reactive(emptyDraft());
     const pickClientId = ref('');
@@ -427,6 +449,81 @@ export default {
       await selectPlan(plan.value.id);
     }
 
+    function exportExcel() {
+      if (!plan.value) return;
+      exportingExcel.value = true;
+      try {
+        const year = plan.value.year;
+        const totals = plan.value.totals || {};
+        const stamp = excelDateStamp();
+        const summaryRows = [
+          [excelCell(t('vengerFeedPlanOfficialTitle', { year }), 'title', 3)],
+          excelBlankRow(),
+          [excelCell(t('financeExcelGeneratedAt'), 'metaLabel'), excelCell(stamp, 'metaValue', 2)],
+          [excelCell(t('vengerFeedPlanExcelNote'), 'metaValue', 3)],
+          excelBlankRow(),
+          [excelCell(t('vengerFeedPlanExcelSheetSummary'), 'section', 3)],
+          [excelCell(t('financeExcelMetric'), 'header'), excelCell(t('amount'), 'header')],
+          [excelCell(t('vengerFeedPlanTotalClients'), 'text'), excelCell(Number(totals.clients_count || 0), 'money')],
+          [excelCell(t('vengerFeedPlanTotalArea'), 'text'), excelCell(excelMoney(totals.pond_area_ha), 'money')],
+          [excelCell(t('vengerFeedPlanTotalLastFeed'), 'text'), excelCell(excelMoney(totals.last_year_feed_kg), 'money')],
+          [excelCell(t('vengerFeedPlanTotalCarp'), 'text'), excelCell(Number(totals.next_year_carp_count || 0), 'money')],
+          [excelCell(t('vengerFeedPlanTotalExtruder'), 'text'), excelCell(excelMoney(totals.next_year_extruder_kg), 'money')],
+          [excelCell(t('vengerFeedPlanTotalGranule'), 'text'), excelCell(excelMoney(totals.next_year_granule_kg), 'money')],
+        ];
+
+        const clientHeader = [
+          excelCell('№', 'header'),
+          excelCell(t('vengerFeedPlanColName'), 'header'),
+          excelCell(t('phone'), 'header'),
+          excelCell(t('vengerFeedPlanColLocation'), 'header'),
+          excelCell(t('vengerFeedPlanColArea'), 'header'),
+          excelCell(t('vengerFeedPlanColLastFeed'), 'header'),
+          excelCell(t('vengerFeedPlanColRating'), 'header'),
+          excelCell(t('vengerFeedPlanColFeedback'), 'header'),
+          excelCell(t('vengerFeedPlanColCarp'), 'header'),
+          excelCell(t('vengerFeedPlanColExtruder'), 'header'),
+          excelCell(t('vengerFeedPlanColGranule'), 'header'),
+        ];
+
+        const clientRows = [
+          [excelCell(t('vengerFeedPlanOfficialTitle', { year }), 'title', 10)],
+          excelBlankRow(),
+          [excelCell(t('vengerFeedPlanTableTitle', { year }), 'section', 10)],
+          clientHeader,
+          ...(plan.value.rows || []).map((row, idx) => [
+            excelCell(idx + 1, 'text'),
+            excelCell(row.client_name || '', 'text'),
+            excelCell(formatPhone(row.phone), 'text'),
+            excelCell(row.location_text || '', 'text'),
+            excelCell(row.pond_area_ha == null ? '' : excelMoney(row.pond_area_ha), 'money'),
+            excelCell(row.last_year_feed_kg == null ? '' : excelMoney(row.last_year_feed_kg), 'money'),
+            excelCell(row.rating_10 == null ? '' : Number(row.rating_10), 'text'),
+            excelCell(row.feedback || '', 'text'),
+            excelCell(row.next_year_carp_count == null ? '' : Number(row.next_year_carp_count), 'money'),
+            excelCell(row.next_year_extruder_kg == null ? '' : excelMoney(row.next_year_extruder_kg), 'money'),
+            excelCell(row.next_year_granule_kg == null ? '' : excelMoney(row.next_year_granule_kg), 'money'),
+          ]),
+        ];
+
+        downloadExcelWorkbook(t('vengerFeedPlanExcelFile', { year }), [
+          {
+            name: t('vengerFeedPlanExcelSheetClients'),
+            columns: [36, 140, 110, 140, 90, 100, 90, 160, 100, 100, 100],
+            freezeRow: 4,
+            rows: clientRows,
+          },
+          {
+            name: t('vengerFeedPlanExcelSheetSummary'),
+            columns: [280, 100, 100, 100],
+            rows: summaryRows,
+          },
+        ]);
+      } finally {
+        exportingExcel.value = false;
+      }
+    }
+
     onMounted(loadPlans);
 
     return {
@@ -438,6 +535,7 @@ export default {
       newYear,
       creating,
       savingRow,
+      exportingExcel,
       rowError,
       draft,
       pickClientId,
@@ -451,6 +549,7 @@ export default {
       addRow,
       patchRow,
       removeRow,
+      exportExcel,
     };
   },
 };
@@ -467,11 +566,26 @@ export default {
   margin-bottom: 0.85rem;
 }
 .vfp-years__head h2,
-.vfp-totals h2,
+.vfp-report h2,
 .vfp-add h2,
 .vfp-table-panel h2 {
-  margin: 0 0 0.65rem;
+  margin: 0 0 0.35rem;
   font-size: 1.05rem;
+}
+.vfp-report__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin-bottom: 0.9rem;
+}
+.vfp-report__eyebrow {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #0d6b3f;
 }
 .vfp-year-form {
   display: flex;
