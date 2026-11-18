@@ -3,8 +3,8 @@
     <OwnerVengerNav v-if="isOwnerView" />
     <div class="page-head">
       <div>
-        <h1>{{ $t('vengerPondsTitle') }}</h1>
-        <p>{{ isOwnerView ? $t('ownerVengerPondsHint') : $t('vengerPondsSimpleHint') }}</p>
+        <h1>{{ isOwnerView ? $t('ownerVengerWorkNav') : $t('vengerPondsTitle') }}</h1>
+        <p>{{ isOwnerView ? $t('ownerVengerWorkHint') : $t('vengerPondsSimpleHint') }}</p>
       </div>
     </div>
 

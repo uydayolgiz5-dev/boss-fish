@@ -15,13 +15,29 @@
 <script>
 import { useRoute } from 'vue-router';
 
+/** Faqat 3 asosiy bo‘lim — takroriy sahifalar olib tashlandi */
 const ITEMS = [
-  { name: 'owner-venger', labelKey: 'ownerVengerOverview', match: ['owner-venger'] },
-  { name: 'owner-venger-clients', labelKey: 'vengerClientsTitle', match: ['owner-venger-clients', 'owner-venger-client'] },
-  { name: 'owner-venger-feed-plan', labelKey: 'vengerFeedPlanNav', match: ['owner-venger-feed-plan'] },
-  { name: 'owner-venger-ponds', labelKey: 'vengerPondsTitle', match: ['owner-venger-ponds'] },
-  { name: 'owner-venger-results', labelKey: 'vengerResultsHubTitle', match: ['owner-venger-results', 'owner-venger-result'] },
-  { name: 'owner-venger-staff', labelKey: 'vengerStaff', match: ['owner-venger-staff'] },
+  {
+    name: 'owner-venger',
+    labelKey: 'ownerVengerOverview',
+    match: ['owner-venger', 'owner-venger-staff'],
+  },
+  {
+    name: 'owner-venger-ponds',
+    labelKey: 'ownerVengerWorkNav',
+    match: [
+      'owner-venger-ponds',
+      'owner-venger-clients',
+      'owner-venger-client',
+      'owner-venger-results',
+      'owner-venger-result',
+    ],
+  },
+  {
+    name: 'owner-venger-feed-plan',
+    labelKey: 'vengerFeedPlanNav',
+    match: ['owner-venger-feed-plan'],
+  },
 ];
 
 export default {

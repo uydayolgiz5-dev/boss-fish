@@ -219,6 +219,8 @@ const messages = {
         ownerVengerSectionHint: 'Venger Carp hodimlari, mijozlar bazasi va natijalarni nazorat qilish',
         ownerVengerOverview: 'Tahlil',
         ownerVengerOverviewHint: 'Havzalar, hodimlar ishi va yakuniy natijalarni bir joyda kuzating.',
+        ownerVengerWorkNav: 'Ishlar',
+        ownerVengerWorkHint: 'Jarayondagi va yakunlangan havzalar, mijoz natijalari — bitta joyda.',
         vengerFeedPlanNav: 'Yem reja',
         vengerFeedPlanCardAction: 'Ochish',
         vengerFeedPlanTitle: 'Mijozlar yem talabi',

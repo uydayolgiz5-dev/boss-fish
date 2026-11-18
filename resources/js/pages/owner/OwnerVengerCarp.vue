@@ -13,27 +13,43 @@
 
     <template v-else>
       <section class="ov-section">
-        <div class="ov-cards">
-          <router-link class="ov-card ov-card--link" :to="{ name: 'owner-venger-clients' }">
-            <span>{{ $t('vengerClientsTitle') }}</span>
-            <strong>{{ number(stats.clients_count) }}</strong>
+        <div class="ov-cards ov-cards--main">
+          <router-link class="ov-card ov-card--link ov-card--open" :to="{ name: 'owner-venger-ponds' }">
+            <span>{{ $t('ownerVengerWorkNav') }}</span>
+            <strong>{{ number((stats.ponds_open || 0) + (stats.ponds_final || 0)) }}</strong>
+            <small>{{ $t('ownerVengerWorkHint') }}</small>
           </router-link>
           <router-link class="ov-card ov-card--link" :to="{ name: 'owner-venger-feed-plan' }">
             <span>{{ $t('vengerFeedPlanNav') }}</span>
             <strong>{{ $t('vengerFeedPlanCardAction') }}</strong>
+            <small>{{ $t('vengerFeedPlanTitle') }}</small>
           </router-link>
-          <router-link class="ov-card ov-card--link ov-card--open" :to="{ name: 'owner-venger-ponds', query: { tab: 'open' } }">
+          <router-link class="ov-card ov-card--link" :to="{ name: 'owner-venger-staff' }">
+            <span>{{ $t('vengerStaff') }}</span>
+            <strong>{{ number(stats.staff_count) }}</strong>
+            <small>{{ $t('ownerVengerStaffPageHint') }}</small>
+          </router-link>
+        </div>
+      </section>
+
+      <section class="ov-section">
+        <div class="ov-cards">
+          <div class="ov-card">
+            <span>{{ $t('vengerClientsTitle') }}</span>
+            <strong>{{ number(stats.clients_count) }}</strong>
+          </div>
+          <div class="ov-card ov-card--open">
             <span>{{ $t('vengerPondsTabOpen') }}</span>
             <strong>{{ number(stats.ponds_open) }}</strong>
-          </router-link>
-          <router-link class="ov-card ov-card--link ov-card--done" :to="{ name: 'owner-venger-ponds', query: { tab: 'final' } }">
+          </div>
+          <div class="ov-card ov-card--done">
             <span>{{ $t('vengerPondsTabDone') }}</span>
             <strong>{{ number(stats.ponds_final) }}</strong>
-          </router-link>
-          <router-link class="ov-card ov-card--link ov-card--rate" :to="{ name: 'owner-venger-results' }">
+          </div>
+          <div class="ov-card ov-card--rate">
             <span>{{ $t('ownerVengerCompletionRate') }}</span>
             <strong>{{ avg.completion_rate != null ? `${fmt(avg.completion_rate, 1)}%` : '—' }}</strong>
-          </router-link>
+          </div>
         </div>
       </section>
 
@@ -394,6 +410,9 @@ export default {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
 }
+.ov-cards--main {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .ov-cards--tight {
   margin-top: 0.85rem;
 }
@@ -645,6 +664,9 @@ export default {
 
 @media (max-width: 900px) {
   .ov-pair { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .ov-cards--main { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   .ov-cards { grid-template-columns: 1fr; }

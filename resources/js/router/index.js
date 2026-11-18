@@ -103,9 +103,10 @@ const routes = [
     { path: '/egasi/venger-carp', name: 'owner-venger', component: OwnerVengerCarp, meta: { auth: true, owner: true, rootSuperadmin: true } },
     { path: '/egasi/venger-carp/hodimlar', name: 'owner-venger-staff', component: OwnerVengerStaff, meta: { auth: true, owner: true, rootSuperadmin: true } },
     { path: '/egasi/venger-carp/yem-reja', name: 'owner-venger-feed-plan', component: OwnerVengerFeedPlan, meta: { auth: true, owner: true, rootSuperadmin: true } },
-    { path: '/egasi/venger-carp/mijozlar', name: 'owner-venger-clients', component: VengerCabinet, meta: { auth: true, owner: true, rootSuperadmin: true } },
     { path: '/egasi/venger-carp/havzalar', name: 'owner-venger-ponds', component: VengerPondsList, meta: { auth: true, owner: true, rootSuperadmin: true } },
-    { path: '/egasi/venger-carp/natijalar', name: 'owner-venger-results', component: VengerResultsHub, meta: { auth: true, owner: true, rootSuperadmin: true } },
+    // Eski alohida sahifalar → Ishlar (havzalar)
+    { path: '/egasi/venger-carp/mijozlar', redirect: { name: 'owner-venger-ponds' } },
+    { path: '/egasi/venger-carp/natijalar', redirect: { name: 'owner-venger-ponds' } },
     { path: '/egasi/venger-carp/mijoz/:clientId', name: 'owner-venger-client', component: VengerClientShow, meta: { auth: true, owner: true, rootSuperadmin: true } },
     { path: '/egasi/venger-carp/natija/:resultId', name: 'owner-venger-result', component: VengerResultShow, meta: { auth: true, owner: true, rootSuperadmin: true } },
     { path: '/egasi/sozlamalar', name: 'owner-settings', component: OwnerSettings, meta: { auth: true, owner: true, rootSuperadmin: true } },
