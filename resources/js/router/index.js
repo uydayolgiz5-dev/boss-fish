@@ -16,6 +16,7 @@ import DirectorAuditJournal from '../pages/director/DirectorAuditJournal.vue';
 import OwnerSecurity from '../pages/owner/OwnerSecurity.vue';
 import OwnerSettings from '../pages/owner/OwnerSettings.vue';
 import OwnerVengerCarp from '../pages/owner/OwnerVengerCarp.vue';
+import OwnerVengerFeedPlan from '../pages/owner/OwnerVengerFeedPlan.vue';
 import OwnerVengerStaff from '../pages/owner/OwnerVengerStaff.vue';
 import OwnerPlanner from '../pages/owner/OwnerPlanner.vue';
 import OwnerExperiences from '../pages/owner/OwnerExperiences.vue';
@@ -101,6 +102,7 @@ const routes = [
     { path: '/egasi/tajriba/:folderId', name: 'owner-experience-folder', component: OwnerExperiences, meta: { auth: true, owner: true, rootSuperadmin: true } },
     { path: '/egasi/venger-carp', name: 'owner-venger', component: OwnerVengerCarp, meta: { auth: true, owner: true, rootSuperadmin: true } },
     { path: '/egasi/venger-carp/hodimlar', name: 'owner-venger-staff', component: OwnerVengerStaff, meta: { auth: true, owner: true, rootSuperadmin: true } },
+    { path: '/egasi/venger-carp/yem-reja', name: 'owner-venger-feed-plan', component: OwnerVengerFeedPlan, meta: { auth: true, owner: true, rootSuperadmin: true } },
     { path: '/egasi/venger-carp/mijozlar', name: 'owner-venger-clients', component: VengerCabinet, meta: { auth: true, owner: true, rootSuperadmin: true } },
     { path: '/egasi/venger-carp/havzalar', name: 'owner-venger-ponds', component: VengerPondsList, meta: { auth: true, owner: true, rootSuperadmin: true } },
     { path: '/egasi/venger-carp/natijalar', name: 'owner-venger-results', component: VengerResultsHub, meta: { auth: true, owner: true, rootSuperadmin: true } },

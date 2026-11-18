@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\SuperadminController;
 use App\Http\Controllers\Api\SupportController;
 use App\Http\Controllers\Api\VengerCabinetController;
 use App\Http\Controllers\Api\VengerClientController;
+use App\Http\Controllers\Api\VengerFeedPlanController;
 use App\Http\Controllers\Api\WorkerCabinetController;
 use Illuminate\Support\Facades\Route;
 
@@ -101,6 +102,15 @@ Route::middleware(['auth:sanctum', 'owner'])->prefix('owner')->group(function ()
         Route::get('/venger/clients/{client}', [VengerClientController::class, 'show']);
         Route::get('/venger/ponds', [VengerClientController::class, 'listPonds']);
         Route::get('/venger/results/{result}', [VengerClientController::class, 'showResult']);
+
+        Route::get('/venger/feed-plans', [VengerFeedPlanController::class, 'index']);
+        Route::post('/venger/feed-plans', [VengerFeedPlanController::class, 'store']);
+        Route::get('/venger/feed-plans/{plan}', [VengerFeedPlanController::class, 'show']);
+        Route::put('/venger/feed-plans/{plan}', [VengerFeedPlanController::class, 'update']);
+        Route::delete('/venger/feed-plans/{plan}', [VengerFeedPlanController::class, 'destroy']);
+        Route::post('/venger/feed-plans/{plan}/rows', [VengerFeedPlanController::class, 'storeRow']);
+        Route::put('/venger/feed-plans/{plan}/rows/{row}', [VengerFeedPlanController::class, 'updateRow']);
+        Route::delete('/venger/feed-plans/{plan}/rows/{row}', [VengerFeedPlanController::class, 'destroyRow']);
 
         Route::get('/planner', [OwnerPlannerController::class, 'show']);
         Route::put('/planner', [OwnerPlannerController::class, 'update']);
@@ -288,4 +298,13 @@ Route::middleware(['auth:sanctum', 'venger'])->prefix('venger')->group(function 
     Route::get('/results/{result}', [VengerClientController::class, 'showResult']);
     Route::put('/results/{result}', [VengerClientController::class, 'updateResult']);
     Route::delete('/results/{result}', [VengerClientController::class, 'destroyResult']);
+
+    Route::get('/feed-plans', [VengerFeedPlanController::class, 'index']);
+    Route::post('/feed-plans', [VengerFeedPlanController::class, 'store']);
+    Route::get('/feed-plans/{plan}', [VengerFeedPlanController::class, 'show']);
+    Route::put('/feed-plans/{plan}', [VengerFeedPlanController::class, 'update']);
+    Route::delete('/feed-plans/{plan}', [VengerFeedPlanController::class, 'destroy']);
+    Route::post('/feed-plans/{plan}/rows', [VengerFeedPlanController::class, 'storeRow']);
+    Route::put('/feed-plans/{plan}/rows/{row}', [VengerFeedPlanController::class, 'updateRow']);
+    Route::delete('/feed-plans/{plan}/rows/{row}', [VengerFeedPlanController::class, 'destroyRow']);
 });

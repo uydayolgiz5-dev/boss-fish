@@ -34,4 +34,9 @@ class VengerClient extends Model
     {
         return $this->hasMany(VengerResult::class)->latest('sold_on');
     }
+
+    public function feedPlanRows(): HasMany
+    {
+        return $this->hasMany(VengerFeedPlanRow::class);
+    }
 }

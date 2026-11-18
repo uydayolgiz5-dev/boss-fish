@@ -18,6 +18,10 @@
             <span>{{ $t('vengerClientsTitle') }}</span>
             <strong>{{ number(stats.clients_count) }}</strong>
           </router-link>
+          <router-link class="ov-card ov-card--link" :to="{ name: 'owner-venger-feed-plan' }">
+            <span>{{ $t('vengerFeedPlanNav') }}</span>
+            <strong>{{ $t('vengerFeedPlanCardAction') }}</strong>
+          </router-link>
           <router-link class="ov-card ov-card--link ov-card--open" :to="{ name: 'owner-venger-ponds', query: { tab: 'open' } }">
             <span>{{ $t('vengerPondsTabOpen') }}</span>
             <strong>{{ number(stats.ponds_open) }}</strong>
