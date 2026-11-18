@@ -52,10 +52,10 @@
           <div class="vfp-totals__grid">
             <div><span>{{ $t('vengerFeedPlanTotalClients') }}</span><strong>{{ plan.totals.clients_count }}</strong></div>
             <div><span>{{ $t('vengerFeedPlanTotalArea') }}</span><strong>{{ fmtNum(plan.totals.pond_area_ha, 2) }} ha</strong></div>
-            <div><span>{{ $t('vengerFeedPlanTotalLastFeed') }}</span><strong>{{ fmtNum(plan.totals.last_year_feed_kg, 0) }} kg</strong></div>
+            <div><span>{{ $t('vengerFeedPlanTotalLastFeed') }}</span><strong>{{ fmtNum(plan.totals.last_year_feed_kg, 2) }} t</strong></div>
             <div><span>{{ $t('vengerFeedPlanTotalCarp') }}</span><strong>{{ fmtNum(plan.totals.next_year_carp_count, 0) }}</strong></div>
-            <div><span>{{ $t('vengerFeedPlanTotalExtruder') }}</span><strong>{{ fmtNum(plan.totals.next_year_extruder_kg, 0) }} kg</strong></div>
-            <div><span>{{ $t('vengerFeedPlanTotalGranule') }}</span><strong>{{ fmtNum(plan.totals.next_year_granule_kg, 0) }} kg</strong></div>
+            <div><span>{{ $t('vengerFeedPlanTotalExtruder') }}</span><strong>{{ fmtNum(plan.totals.next_year_extruder_kg, 2) }} t</strong></div>
+            <div><span>{{ $t('vengerFeedPlanTotalGranule') }}</span><strong>{{ fmtNum(plan.totals.next_year_granule_kg, 2) }} t</strong></div>
           </div>
         </section>
 
