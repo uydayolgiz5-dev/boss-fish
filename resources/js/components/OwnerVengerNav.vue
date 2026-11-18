@@ -15,7 +15,6 @@
 <script>
 import { useRoute } from 'vue-router';
 
-/** Faqat 3 asosiy bo‘lim — takroriy sahifalar olib tashlandi */
 const ITEMS = [
   {
     name: 'owner-venger',
@@ -23,15 +22,14 @@ const ITEMS = [
     match: ['owner-venger', 'owner-venger-staff'],
   },
   {
+    name: 'owner-venger-clients',
+    labelKey: 'vengerClientsTitle',
+    match: ['owner-venger-clients', 'owner-venger-client', 'owner-venger-result-new', 'owner-venger-result-edit'],
+  },
+  {
     name: 'owner-venger-ponds',
-    labelKey: 'ownerVengerWorkNav',
-    match: [
-      'owner-venger-ponds',
-      'owner-venger-clients',
-      'owner-venger-client',
-      'owner-venger-results',
-      'owner-venger-result',
-    ],
+    labelKey: 'vengerResultsTitle',
+    match: ['owner-venger-ponds', 'owner-venger-result'],
   },
   {
     name: 'owner-venger-feed-plan',

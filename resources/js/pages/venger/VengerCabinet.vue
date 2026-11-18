@@ -6,7 +6,7 @@
         <h1>{{ $t('vengerClientsTitle') }}</h1>
         <p>{{ isOwnerView ? $t('ownerVengerClientsHint') : $t('vengerClientsOnlyHint') }}</p>
       </div>
-      <button v-if="!isOwnerView" class="btn btn-primary" type="button" @click="openCreate"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> {{ $t('addVengerClient') }}</button>
+      <button class="btn btn-primary" type="button" @click="openCreate"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> {{ $t('addVengerClient') }}</button>
     </div>
 
     <div class="panel venger-search">
@@ -222,7 +222,7 @@ export default {
         return;
       }
       try {
-        await window.axios.post('/venger/clients', {
+        await window.axios.post(`${apiBase.value}/clients`, {
           first_name: form.first_name.trim(),
           last_name: form.last_name.trim(),
           address: form.address || null,

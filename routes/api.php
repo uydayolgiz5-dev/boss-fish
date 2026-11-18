@@ -99,9 +99,15 @@ Route::middleware(['auth:sanctum', 'owner'])->prefix('owner')->group(function ()
         Route::delete('/venger/staff/{vengerStaff}', [OwnerCabinetController::class, 'destroyVengerStaff']);
 
         Route::get('/venger/clients', [VengerClientController::class, 'index']);
+        Route::post('/venger/clients', [VengerClientController::class, 'store']);
         Route::get('/venger/clients/{client}', [VengerClientController::class, 'show']);
+        Route::put('/venger/clients/{client}', [VengerClientController::class, 'update']);
+        Route::delete('/venger/clients/{client}', [VengerClientController::class, 'destroy']);
+        Route::post('/venger/clients/{client}/results', [VengerClientController::class, 'storeResult']);
         Route::get('/venger/ponds', [VengerClientController::class, 'listPonds']);
         Route::get('/venger/results/{result}', [VengerClientController::class, 'showResult']);
+        Route::put('/venger/results/{result}', [VengerClientController::class, 'updateResult']);
+        Route::delete('/venger/results/{result}', [VengerClientController::class, 'destroyResult']);
 
         Route::get('/venger/feed-plans', [VengerFeedPlanController::class, 'index']);
         Route::post('/venger/feed-plans', [VengerFeedPlanController::class, 'store']);

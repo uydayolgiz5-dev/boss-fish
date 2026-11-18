@@ -221,6 +221,7 @@ const messages = {
         ownerVengerOverviewHint: 'Havzalar, hodimlar ishi va yakuniy natijalarni bir joyda kuzating.',
         ownerVengerWorkNav: 'Ishlar',
         ownerVengerWorkHint: 'Jarayondagi va yakunlangan havzalar, mijoz natijalari — bitta joyda.',
+        ownerVengerResultsBrowseHint: 'Barcha natijalar shu yerda: mijoz qidirmasdan jarayon va yakunlanganlarni ko‘ring.',
         vengerFeedPlanNav: 'Yem reja',
         vengerFeedPlanCardAction: 'Ochish',
         vengerFeedPlanTitle: 'Mijozlar yem talabi',

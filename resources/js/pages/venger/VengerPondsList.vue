@@ -3,8 +3,8 @@
     <OwnerVengerNav v-if="isOwnerView" />
     <div class="page-head">
       <div>
-        <h1>{{ isOwnerView ? $t('ownerVengerWorkNav') : $t('vengerPondsTitle') }}</h1>
-        <p>{{ isOwnerView ? $t('ownerVengerWorkHint') : $t('vengerPondsSimpleHint') }}</p>
+        <h1>{{ isOwnerView ? $t('vengerResultsTitle') : $t('vengerPondsTitle') }}</h1>
+        <p>{{ isOwnerView ? $t('ownerVengerResultsBrowseHint') : $t('vengerPondsSimpleHint') }}</p>
       </div>
     </div>
 
@@ -64,9 +64,8 @@
             </div>
             <div class="vp-row__actions">
               <router-link
-                v-if="!isOwnerView"
                 class="btn btn-primary btn-sm"
-                :to="{ name: 'venger-result-edit', params: { resultId: r.id } }"
+                :to="editRoute(r.id)"
               >
                 {{ $t('vengerContinueResult') }}
               </router-link>
@@ -158,6 +157,12 @@ export default {
         : { name: 'venger-result', params: { resultId } };
     }
 
+    function editRoute(resultId) {
+      return auth.isOwner()
+        ? { name: 'owner-venger-result-edit', params: { resultId } }
+        : { name: 'venger-result-edit', params: { resultId } };
+    }
+
     function fmt(v, decimals = 0) {
       const n = Number(v);
       if (!Number.isFinite(n)) return '0';
@@ -218,8 +223,8 @@ export default {
     onMounted(load);
 
     return {
-      loading, error, focus, searchQ, openPonds, finalPonds, stats, isOwnerView,
-      fmt, formatDate, formatPhone, pondTitle, workflowLabel, resultRoute, onSearchInput,
+      loading, error, focus, searchQ, openPonds, finalPonds, stats, isOwnerView, editRoute,
+      fmt, formatDate, formatPhone, pondTitle, workflowLabel, resultRoute, editRoute, onSearchInput,
     };
   },
 };

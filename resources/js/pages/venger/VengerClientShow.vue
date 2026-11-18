@@ -9,9 +9,9 @@
       <div class="page-head-actions">
         <router-link class="btn btn-outline btn-sm" :to="backTo">{{ $t('back') }}</router-link>
         <router-link
-          v-if="!isOwnerView && client"
+          v-if="client"
           class="btn btn-primary btn-sm"
-          :to="{ name: 'venger-result-new', params: { clientId: client.id } }"
+          :to="newResultRoute"
         >
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           {{ $t('vengerNewResult') }}
@@ -77,14 +77,14 @@
               <router-link class="btn btn-primary btn-sm" :to="resultRoute(r.id)">{{ $t('vengerGoodNewsBtn') }}</router-link>
               <router-link class="btn btn-outline btn-sm" :to="resultRoute(r.id)">{{ $t('viewResult') }}</router-link>
               <router-link
-                v-if="!isOwnerView && r.status !== 'final'"
+                v-if="r.status !== 'final'"
                 class="btn btn-primary btn-sm"
                 :to="editRoute(r.id)"
               >
                 {{ $t('vengerContinueResult') }}
               </router-link>
               <router-link
-                v-else-if="!isOwnerView"
+                v-else
                 class="btn btn-outline btn-sm"
                 :to="editRoute(r.id)"
               >
@@ -132,14 +132,14 @@
                     {{ $t('viewResult') }}
                   </router-link>
                   <router-link
-                    v-if="!isOwnerView && r.status !== 'final'"
+                    v-if="r.status !== 'final'"
                     class="btn btn-primary btn-sm"
                     :to="editRoute(r.id)"
                   >
                     {{ $t('vengerContinueResult') }}
                   </router-link>
                   <router-link
-                    v-else-if="!isOwnerView"
+                    v-else
                     class="btn btn-outline btn-sm"
                     :to="editRoute(r.id)"
                   >
@@ -180,13 +180,19 @@ export default {
     const backTo = computed(() => {
       if (auth.isOwner()) {
         return route.query.from === 'results'
-          ? { name: 'owner-venger-results' }
+          ? { name: 'owner-venger-ponds' }
           : { name: 'owner-venger-clients' };
       }
       return route.query.from === 'results'
         ? { name: 'venger-results-hub' }
         : { name: 'venger-cabinet' };
     });
+
+    const newResultRoute = computed(() => (
+      auth.isOwner()
+        ? { name: 'owner-venger-result-new', params: { clientId: route.params.clientId } }
+        : { name: 'venger-result-new', params: { clientId: route.params.clientId } }
+    ));
 
     function number(v, decimals = 0) {
       const n = Number(v);
@@ -229,7 +235,9 @@ export default {
     }
 
     function editRoute(id) {
-      return { name: 'venger-result-edit', params: { resultId: id } };
+      return auth.isOwner()
+        ? { name: 'owner-venger-result-edit', params: { resultId: id } }
+        : { name: 'venger-result-edit', params: { resultId: id } };
     }
 
     async function load() {
@@ -248,7 +256,7 @@ export default {
     onMounted(load);
 
     return {
-      loading, error, client, isOwnerView, backTo,
+      loading, error, client, isOwnerView, backTo, newResultRoute,
       number, formatPhone, formatDate, phaseLabel, feedLabels, resultRoute, editRoute,
     };
   },

@@ -6,6 +6,9 @@
       <div>
         <h1>{{ $t('ownerVengerAnalyticsTitle') }}</h1>
       </div>
+      <router-link class="btn btn-outline btn-sm" :to="{ name: 'owner-venger-staff' }">
+        {{ $t('vengerStaff') }}
+      </router-link>
     </div>
 
     <div v-if="loading" class="empty">{{ $t('loading') }}</div>
@@ -14,20 +17,20 @@
     <template v-else>
       <section class="ov-section">
         <div class="ov-cards ov-cards--main">
+          <router-link class="ov-card ov-card--link" :to="{ name: 'owner-venger-clients' }">
+            <span>{{ $t('vengerClientsTitle') }}</span>
+            <strong>{{ number(stats.clients_count) }}</strong>
+            <small>{{ $t('ownerVengerClientsHint') }}</small>
+          </router-link>
           <router-link class="ov-card ov-card--link ov-card--open" :to="{ name: 'owner-venger-ponds' }">
-            <span>{{ $t('ownerVengerWorkNav') }}</span>
+            <span>{{ $t('vengerResultsTitle') }}</span>
             <strong>{{ number((stats.ponds_open || 0) + (stats.ponds_final || 0)) }}</strong>
-            <small>{{ $t('ownerVengerWorkHint') }}</small>
+            <small>{{ $t('ownerVengerResultsBrowseHint') }}</small>
           </router-link>
           <router-link class="ov-card ov-card--link" :to="{ name: 'owner-venger-feed-plan' }">
             <span>{{ $t('vengerFeedPlanNav') }}</span>
             <strong>{{ $t('vengerFeedPlanCardAction') }}</strong>
             <small>{{ $t('vengerFeedPlanTitle') }}</small>
-          </router-link>
-          <router-link class="ov-card ov-card--link" :to="{ name: 'owner-venger-staff' }">
-            <span>{{ $t('vengerStaff') }}</span>
-            <strong>{{ number(stats.staff_count) }}</strong>
-            <small>{{ $t('ownerVengerStaffPageHint') }}</small>
           </router-link>
         </div>
       </section>

@@ -269,6 +269,7 @@ import {
   feedsTotalKg,
 } from '../../utils/vengerFeeds';
 import { avgGramsFrom, syncLinkedMass } from '../../utils/linkedMass';
+import auth from '../../auth';
 import { t } from '../../i18n';
 
 const BLOCK_KEYS = {
@@ -308,6 +309,8 @@ export default {
     const error = ref('');
     const clients = ref([]);
     const clientName = ref('');
+    const isOwnerView = computed(() => auth.isOwner());
+    const apiBase = computed(() => (auth.isOwner() ? '/owner/venger' : '/venger'));
     const fixedClient = computed(() => !!route.params.clientId);
     const isEdit = computed(() => !!route.params.resultId);
     const clientLocked = computed(() => fixedClient.value || isEdit.value);
@@ -344,9 +347,14 @@ export default {
     });
 
     const backTo = computed(() => {
-      if (form.client_id) return { name: 'venger-client', params: { clientId: form.client_id } };
-      if (route.params.clientId) return { name: 'venger-client', params: { clientId: route.params.clientId } };
-      return { name: 'venger-ponds' };
+      const clientId = form.client_id || route.params.clientId;
+      if (clientId) {
+        return {
+          name: isOwnerView.value ? 'owner-venger-client' : 'venger-client',
+          params: { clientId },
+        };
+      }
+      return { name: isOwnerView.value ? 'owner-venger-ponds' : 'venger-ponds' };
     });
 
     function onLinked(type, block, field, value) {
@@ -413,7 +421,7 @@ export default {
       error.value = '';
       try {
         if (isEdit.value) {
-          const { data } = await window.axios.get(`/venger/results/${route.params.resultId}`);
+          const { data } = await window.axios.get(`${apiBase.value}/results/${route.params.resultId}`);
           form.client_id = data.client?.id || '';
           clientName.value = data.client?.name || '';
           form.title = data.title || '';
@@ -450,7 +458,7 @@ export default {
             }
           }
         } else {
-          const { data } = await window.axios.get('/venger/clients');
+          const { data } = await window.axios.get(`${apiBase.value}/clients`);
           clients.value = data.clients || [];
           if (route.params.clientId) {
             form.client_id = Number(route.params.clientId);
@@ -459,7 +467,7 @@ export default {
             if (c) {
               applyClientLocation(c);
             } else {
-              const detail = await window.axios.get(`/venger/clients/${route.params.clientId}`);
+              const detail = await window.axios.get(`${apiBase.value}/clients/${route.params.clientId}`);
               clientName.value = detail.data.name;
               applyClientLocation(detail.data);
             }
@@ -549,14 +557,17 @@ export default {
 
         let resultId;
         if (isEdit.value) {
-          const { data } = await window.axios.put(`/venger/results/${route.params.resultId}`, payload);
+          const { data } = await window.axios.put(`${apiBase.value}/results/${route.params.resultId}`, payload);
           resultId = data.id;
         } else {
           const clientId = form.client_id || route.params.clientId;
-          const { data } = await window.axios.post(`/venger/clients/${clientId}/results`, payload);
+          const { data } = await window.axios.post(`${apiBase.value}/clients/${clientId}/results`, payload);
           resultId = data.id;
         }
-        await router.push({ name: 'venger-result', params: { resultId } });
+        await router.push({
+          name: isOwnerView.value ? 'owner-venger-result' : 'venger-result',
+          params: { resultId },
+        });
       } catch (e) {
         const errors = e.response?.data?.errors;
         error.value = errors ? Object.values(errors).flat().join(' ') : (e.response?.data?.message || t('errorGeneric'));
