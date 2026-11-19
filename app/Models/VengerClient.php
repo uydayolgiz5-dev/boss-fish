@@ -16,6 +16,7 @@ class VengerClient extends Model
         'region',
         'district',
         'phone',
+        'phone2',
         'notes',
         'created_by',
     ];

@@ -13,6 +13,7 @@ class VengerFeedPlanRow extends Model
         'sort_order',
         'client_name',
         'phone',
+        'phone2',
         'location_text',
         'region',
         'district',

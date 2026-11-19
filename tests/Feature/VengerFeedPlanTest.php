@@ -104,4 +104,36 @@ class VengerFeedPlanTest extends TestCase
 
         $this->assertSame(1, VengerClient::query()->count());
     }
+
+    public function test_year_comparison_shows_growth_percent(): void
+    {
+        $owner = $this->owner();
+
+        $y26 = VengerFeedPlan::query()->create(['year' => 2026, 'created_by' => $owner->id]);
+        $y27 = VengerFeedPlan::query()->create(['year' => 2027, 'created_by' => $owner->id]);
+
+        $this->actingAs($owner, 'sanctum')
+            ->postJson("/api/owner/venger/feed-plans/{$y26->id}/rows", [
+                'client_name' => 'A',
+                'phone' => '+998901110001',
+                'next_year_extruder_kg' => 100,
+                'next_year_granule_kg' => 50,
+            ])->assertCreated();
+
+        $this->actingAs($owner, 'sanctum')
+            ->postJson("/api/owner/venger/feed-plans/{$y27->id}/rows", [
+                'client_name' => 'B',
+                'phone' => '+998901110002',
+                'phone2' => '+998901110003',
+                'next_year_extruder_kg' => 150,
+                'next_year_granule_kg' => 50,
+            ])->assertCreated();
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/owner/venger/feed-plans')
+            ->assertOk()
+            ->assertJsonPath('comparison.0.year', 2027)
+            ->assertJsonPath('comparison.0.growth.next_year_extruder_kg', 50)
+            ->assertJsonPath('comparison.0.growth.total_feed_plan_t', 33.3);
+    }
 }

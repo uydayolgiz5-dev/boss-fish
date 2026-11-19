@@ -44,10 +44,12 @@ class VengerClientController extends Controller
                     ->orWhere('first_name', 'like', $like)
                     ->orWhere('last_name', 'like', $like)
                     ->orWhere('phone', 'like', $like)
+                    ->orWhere('phone2', 'like', $like)
                     ->orWhere('region', 'like', $like)
                     ->orWhere('district', 'like', $like);
                 if ($digits) {
-                    $inner->orWhere('phone', 'like', '%'.$digits.'%');
+                    $inner->orWhere('phone', 'like', '%'.$digits.'%')
+                        ->orWhere('phone2', 'like', '%'.$digits.'%');
                 }
             });
         }
@@ -260,6 +262,15 @@ class VengerClientController extends Controller
                 'regex:/^\+998\d{9}$/',
                 Rule::unique('venger_clients', 'phone')->ignore($ignoreId),
             ],
+            'phone2' => [
+                'nullable',
+                'string',
+                'max:32',
+                'regex:/^\+998\d{9}$/',
+                'different:phone',
+                Rule::unique('venger_clients', 'phone')->ignore($ignoreId),
+                Rule::unique('venger_clients', 'phone2')->ignore($ignoreId),
+            ],
             'notes' => 'nullable|string|max:2000',
         ]);
 
@@ -267,6 +278,10 @@ class VengerClientController extends Controller
             throw ValidationException::withMessages([
                 'district' => ['Tanlangan tuman/shahar ushbu viloyatga tegishli emas.'],
             ]);
+        }
+
+        if (($data['phone2'] ?? null) === '') {
+            $data['phone2'] = null;
         }
 
         return $data;
@@ -523,6 +538,7 @@ class VengerClientController extends Controller
             'region' => $client->region,
             'district' => $client->district,
             'phone' => $client->phone,
+            'phone2' => $client->phone2,
             'notes' => $client->notes,
             'results_count' => (int) ($client->results_count ?? $client->results()->count()),
             'latest_result' => $latest ? [
@@ -550,6 +566,7 @@ class VengerClientController extends Controller
             'region' => $client->region,
             'district' => $client->district,
             'phone' => $client->phone,
+            'phone2' => $client->phone2,
             'notes' => $client->notes,
             'results_count' => (int) ($client->results_count ?? $client->results()->count()),
             'created_by' => $client->creator?->only(['id', 'name']),

@@ -43,6 +43,7 @@
             <strong class="venger-mcard__name">{{ c.name }}</strong>
             <p class="venger-mcard__line">{{ c.region || '—' }}<template v-if="c.district"> · {{ c.district }}</template></p>
             <p class="venger-mcard__line mono">{{ formatPhone(c.phone) }}</p>
+            <p v-if="c.phone2" class="venger-mcard__line mono">{{ formatPhone(c.phone2) }}</p>
             <p v-if="isOwnerView" class="venger-mcard__line">{{ c.staff?.name || '—' }}</p>
             <router-link class="btn btn-primary btn-sm" :to="clientRoute(c.id)">{{ $t('open') }}</router-link>
           </article>
@@ -65,7 +66,10 @@
                 <td><strong>{{ c.name }}</strong></td>
                 <td>{{ c.region || '—' }}</td>
                 <td>{{ c.district || '—' }}</td>
-                <td class="mono">{{ formatPhone(c.phone) }}</td>
+                <td class="mono">
+                  {{ formatPhone(c.phone) }}
+                  <template v-if="c.phone2"><br>{{ formatPhone(c.phone2) }}</template>
+                </td>
                 <td v-if="isOwnerView">{{ c.staff?.name || '—' }}</td>
                 <td>
                   <router-link class="btn btn-outline btn-sm" :to="clientRoute(c.id)">
@@ -110,6 +114,10 @@
             <PhoneInput v-model="form.phone" required />
           </div>
           <div class="field">
+            <label>{{ $t('phone2Optional') }}</label>
+            <PhoneInput v-model="form.phone2" />
+          </div>
+          <div class="field">
             <label>{{ $t('notes') }}</label>
             <textarea v-model="form.notes" rows="3" maxlength="2000" />
           </div>
@@ -142,6 +150,7 @@ const emptyForm = () => ({
   region: '',
   district: '',
   phone: '+998',
+  phone2: '+998',
   notes: '',
 });
 
@@ -221,6 +230,11 @@ export default {
         formError.value = t('phoneIncompleteFull');
         return;
       }
+      const phone2 = isCompletePhone(form.phone2) ? form.phone2 : null;
+      if (form.phone2 && form.phone2 !== '+998' && !phone2) {
+        formError.value = t('phoneIncompleteFull');
+        return;
+      }
       try {
         await window.axios.post(`${apiBase.value}/clients`, {
           first_name: form.first_name.trim(),
@@ -229,6 +243,7 @@ export default {
           region: form.region,
           district: form.district,
           phone: form.phone,
+          phone2,
           notes: form.notes || null,
         });
         modal.value = false;

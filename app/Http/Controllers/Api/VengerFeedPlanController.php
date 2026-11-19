@@ -18,12 +18,51 @@ class VengerFeedPlanController extends Controller
     public function index(): JsonResponse
     {
         $plans = VengerFeedPlan::query()
-            ->withCount('rows')
-            ->orderByDesc('year')
-            ->get()
-            ->map(fn (VengerFeedPlan $plan) => $this->planListPayload($plan));
+            ->with('rows')
+            ->orderBy('year')
+            ->get();
 
-        return response()->json(['plans' => $plans]);
+        $series = $plans->map(function (VengerFeedPlan $plan) {
+            $totals = $this->planTotals($plan->rows);
+
+            return [
+                'id' => $plan->id,
+                'year' => $plan->year,
+                'title' => $plan->title,
+                'notes' => $plan->notes,
+                'rows_count' => $totals['clients_count'],
+                'totals' => $totals,
+                'created_at' => optional($plan->created_at)?->toIso8601String(),
+            ];
+        })->values();
+
+        $comparison = [];
+        foreach ($series as $idx => $row) {
+            $prev = $idx > 0 ? $series[$idx - 1] : null;
+            $comparison[] = [
+                'year' => $row['year'],
+                'plan_id' => $row['id'],
+                'totals' => $row['totals'],
+                'growth' => [
+                    'clients_count' => $this->growthPct($prev['totals']['clients_count'] ?? null, $row['totals']['clients_count']),
+                    'pond_area_ha' => $this->growthPct($prev['totals']['pond_area_ha'] ?? null, $row['totals']['pond_area_ha']),
+                    'last_year_feed_kg' => $this->growthPct($prev['totals']['last_year_feed_kg'] ?? null, $row['totals']['last_year_feed_kg']),
+                    'next_year_carp_count' => $this->growthPct($prev['totals']['next_year_carp_count'] ?? null, $row['totals']['next_year_carp_count']),
+                    'next_year_extruder_kg' => $this->growthPct($prev['totals']['next_year_extruder_kg'] ?? null, $row['totals']['next_year_extruder_kg']),
+                    'next_year_granule_kg' => $this->growthPct($prev['totals']['next_year_granule_kg'] ?? null, $row['totals']['next_year_granule_kg']),
+                    'total_feed_plan_t' => $this->growthPct(
+                        $prev ? (($prev['totals']['next_year_extruder_kg'] ?? 0) + ($prev['totals']['next_year_granule_kg'] ?? 0)) : null,
+                        ($row['totals']['next_year_extruder_kg'] ?? 0) + ($row['totals']['next_year_granule_kg'] ?? 0),
+                    ),
+                ],
+                'vs_year' => $prev['year'] ?? null,
+            ];
+        }
+
+        return response()->json([
+            'plans' => $series->sortByDesc('year')->values(),
+            'comparison' => array_reverse($comparison),
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -123,6 +162,7 @@ class VengerFeedPlanController extends Controller
         $data = $request->validate([
             'client_name' => [$req, 'string', 'max:255'],
             'phone' => [$req, 'string', 'max:32', 'regex:/^\+998\d{9}$/'],
+            'phone2' => ['nullable', 'string', 'max:32', 'regex:/^\+998\d{9}$/', 'different:phone'],
             'location_text' => 'nullable|string|max:500',
             'region' => ['nullable', 'string', Rule::in(Regions::all())],
             'district' => 'nullable|string|max:120',
@@ -142,6 +182,10 @@ class VengerFeedPlanController extends Controller
             ]);
         }
 
+        if (($data['phone2'] ?? null) === '') {
+            $data['phone2'] = null;
+        }
+
         return $data;
     }
 
@@ -152,7 +196,7 @@ class VengerFeedPlanController extends Controller
     private function rowAttributes(array $data): array
     {
         $keys = [
-            'client_name', 'phone', 'location_text', 'region', 'district',
+            'client_name', 'phone', 'phone2', 'location_text', 'region', 'district',
             'pond_area_ha', 'last_year_feed_kg', 'rating_10', 'feedback',
             'next_year_carp_count', 'next_year_extruder_kg', 'next_year_granule_kg',
         ];
@@ -181,7 +225,8 @@ class VengerFeedPlanController extends Controller
 
         if ($preferredId) {
             $preferred = VengerClient::query()->find($preferredId);
-            if ($preferred && $preferred->phone === ($data['phone'] ?? $preferred->phone)) {
+            $phone = (string) ($data['phone'] ?? '');
+            if ($preferred && ($preferred->phone === $phone || $preferred->phone2 === $phone || $phone === '')) {
                 $this->syncClientFromRow($preferred, $data);
 
                 return $preferred;
@@ -189,7 +234,17 @@ class VengerFeedPlanController extends Controller
         }
 
         $phone = (string) ($data['phone'] ?? '');
-        $existing = VengerClient::query()->where('phone', $phone)->first();
+        $phone2 = (string) ($data['phone2'] ?? '');
+        $existing = VengerClient::query()
+            ->where(function ($q) use ($phone, $phone2) {
+                if ($phone !== '') {
+                    $q->where('phone', $phone)->orWhere('phone2', $phone);
+                }
+                if ($phone2 !== '') {
+                    $q->orWhere('phone', $phone2)->orWhere('phone2', $phone2);
+                }
+            })
+            ->first();
         if ($existing) {
             $this->syncClientFromRow($existing, $data);
 
@@ -208,6 +263,7 @@ class VengerFeedPlanController extends Controller
             'first_name' => $first,
             'last_name' => $last,
             'phone' => $phone,
+            'phone2' => $phone2 !== '' ? $phone2 : null,
             'address' => $data['location_text'] ?? null,
             'region' => $region,
             'district' => $district,
@@ -230,6 +286,9 @@ class VengerFeedPlanController extends Controller
         }
         if (! empty($data['phone'])) {
             $updates['phone'] = $data['phone'];
+        }
+        if (array_key_exists('phone2', $data)) {
+            $updates['phone2'] = $data['phone2'] ?: null;
         }
         if (array_key_exists('location_text', $data) && $data['location_text']) {
             $updates['address'] = $data['location_text'];
@@ -308,7 +367,22 @@ class VengerFeedPlanController extends Controller
     private function planDetailPayload(VengerFeedPlan $plan): array
     {
         $rows = $plan->rows;
-        $totals = [
+        $totals = $this->planTotals($rows);
+
+        return [
+            ...$this->planListPayload($plan),
+            'totals' => $totals,
+            'rows' => $rows->map(fn (VengerFeedPlanRow $row) => $this->rowPayload($row))->values(),
+        ];
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, VengerFeedPlanRow>  $rows
+     * @return array{clients_count:int,pond_area_ha:float,last_year_feed_kg:float,next_year_carp_count:int,next_year_extruder_kg:float,next_year_granule_kg:float}
+     */
+    private function planTotals($rows): array
+    {
+        return [
             'clients_count' => $rows->count(),
             'pond_area_ha' => round((float) $rows->sum('pond_area_ha'), 3),
             'last_year_feed_kg' => round((float) $rows->sum('last_year_feed_kg'), 2),
@@ -316,12 +390,20 @@ class VengerFeedPlanController extends Controller
             'next_year_extruder_kg' => round((float) $rows->sum('next_year_extruder_kg'), 2),
             'next_year_granule_kg' => round((float) $rows->sum('next_year_granule_kg'), 2),
         ];
+    }
 
-        return [
-            ...$this->planListPayload($plan),
-            'totals' => $totals,
-            'rows' => $rows->map(fn (VengerFeedPlanRow $row) => $this->rowPayload($row))->values(),
-        ];
+    private function growthPct(mixed $prev, mixed $current): ?float
+    {
+        $p = $prev === null ? null : (float) $prev;
+        $c = (float) $current;
+        if ($p === null) {
+            return null;
+        }
+        if ($p == 0.0) {
+            return $c > 0 ? 100.0 : 0.0;
+        }
+
+        return round((($c - $p) / abs($p)) * 100, 1);
     }
 
     private function rowPayload(VengerFeedPlanRow $row): array
@@ -333,6 +415,7 @@ class VengerFeedPlanController extends Controller
             'sort_order' => $row->sort_order,
             'client_name' => $row->client_name,
             'phone' => $row->phone,
+            'phone2' => $row->phone2,
             'location_text' => $row->location_text,
             'region' => $row->region,
             'district' => $row->district,
@@ -347,6 +430,7 @@ class VengerFeedPlanController extends Controller
                 'id' => $row->client->id,
                 'name' => $row->client->name,
                 'phone' => $row->client->phone,
+                'phone2' => $row->client->phone2,
             ] : null,
         ];
     }

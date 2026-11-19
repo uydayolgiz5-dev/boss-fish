@@ -45,6 +45,10 @@
             <span>{{ $t('phone') }}</span>
             <strong class="mono">{{ formatPhone(client.phone) }}</strong>
           </div>
+          <div v-if="client.phone2" class="cred-item">
+            <span>{{ $t('phone2Optional') }}</span>
+            <strong class="mono">{{ formatPhone(client.phone2) }}</strong>
+          </div>
         </div>
         <p v-if="client.notes" class="field-hint">{{ client.notes }}</p>
       </div>

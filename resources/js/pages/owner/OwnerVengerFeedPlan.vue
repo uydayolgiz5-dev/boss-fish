@@ -73,6 +73,60 @@
           </div>
         </section>
 
+        <section v-if="comparison.length" class="panel vfp-compare">
+          <h2>{{ $t('vengerFeedPlanCompareTitle') }}</h2>
+          <p class="field-hint">{{ $t('vengerFeedPlanCompareHint') }}</p>
+          <div v-if="comparison.length < 2" class="empty">{{ $t('vengerFeedPlanCompareEmpty') }}</div>
+          <div v-else class="table-scroll">
+            <table class="vfp-table vfp-table--compare">
+              <thead>
+                <tr>
+                  <th>{{ $t('vengerFeedPlanCompareYear') }}</th>
+                  <th>{{ $t('vengerFeedPlanCompareClients') }}</th>
+                  <th>{{ $t('vengerFeedPlanCompareArea') }}</th>
+                  <th>{{ $t('vengerFeedPlanCompareCarp') }}</th>
+                  <th>{{ $t('vengerFeedPlanCompareExtruder') }}</th>
+                  <th>{{ $t('vengerFeedPlanCompareGranule') }}</th>
+                  <th>{{ $t('vengerFeedPlanCompareTotalFeed') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in comparison" :key="row.year">
+                  <td>
+                    <strong>{{ row.year }}</strong>
+                    <small v-if="row.vs_year" class="vfp-vs">{{ $t('vengerFeedPlanCompareVs', { year: row.vs_year }) }}</small>
+                    <small v-else class="vfp-vs">{{ $t('vengerFeedPlanCompareFirst') }}</small>
+                  </td>
+                  <td class="num">
+                    {{ fmtNum(row.totals.clients_count, 0) }}
+                    <span class="vfp-growth" :class="growthClass(row.growth.clients_count)">{{ growthLabel(row.growth.clients_count) }}</span>
+                  </td>
+                  <td class="num">
+                    {{ fmtNum(row.totals.pond_area_ha, 2) }}
+                    <span class="vfp-growth" :class="growthClass(row.growth.pond_area_ha)">{{ growthLabel(row.growth.pond_area_ha) }}</span>
+                  </td>
+                  <td class="num">
+                    {{ fmtNum(row.totals.next_year_carp_count, 0) }}
+                    <span class="vfp-growth" :class="growthClass(row.growth.next_year_carp_count)">{{ growthLabel(row.growth.next_year_carp_count) }}</span>
+                  </td>
+                  <td class="num">
+                    {{ fmtNum(row.totals.next_year_extruder_kg, 2) }} t
+                    <span class="vfp-growth" :class="growthClass(row.growth.next_year_extruder_kg)">{{ growthLabel(row.growth.next_year_extruder_kg) }}</span>
+                  </td>
+                  <td class="num">
+                    {{ fmtNum(row.totals.next_year_granule_kg, 2) }} t
+                    <span class="vfp-growth" :class="growthClass(row.growth.next_year_granule_kg)">{{ growthLabel(row.growth.next_year_granule_kg) }}</span>
+                  </td>
+                  <td class="num">
+                    {{ fmtNum((row.totals.next_year_extruder_kg || 0) + (row.totals.next_year_granule_kg || 0), 2) }} t
+                    <span class="vfp-growth" :class="growthClass(row.growth.total_feed_plan_t)">{{ growthLabel(row.growth.total_feed_plan_t) }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         <section class="panel vfp-add">
           <h2>{{ $t('vengerFeedPlanAddRow') }}</h2>
           <p class="field-hint">{{ $t('vengerFeedPlanAddRowHint') }}</p>
@@ -95,6 +149,10 @@
             <div class="field">
               <label>{{ $t('phone') }} *</label>
               <PhoneInput v-model="draft.phone" required />
+            </div>
+            <div class="field">
+              <label>{{ $t('phone2Optional') }}</label>
+              <PhoneInput v-model="draft.phone2" />
             </div>
             <div class="field">
               <label>{{ $t('vengerFeedPlanColLocation') }}</label>
@@ -147,6 +205,7 @@
                   <th>№</th>
                   <th>{{ $t('vengerFeedPlanColName') }}</th>
                   <th>{{ $t('phone') }}</th>
+                  <th>{{ $t('phone2Optional') }}</th>
                   <th>{{ $t('vengerFeedPlanColLocation') }}</th>
                   <th class="num">{{ $t('vengerFeedPlanColArea') }}</th>
                   <th class="num">{{ $t('vengerFeedPlanColLastFeed') }}</th>
@@ -169,6 +228,14 @@
                     />
                   </td>
                   <td class="mono">{{ formatPhone(row.phone) }}</td>
+                  <td>
+                    <input
+                      class="vfp-cell mono"
+                      :value="row.phone2 || ''"
+                      :placeholder="'+998'"
+                      @change="patchPhone2(row, $event.target.value)"
+                    />
+                  </td>
                   <td>
                     <input
                       class="vfp-cell"
@@ -275,6 +342,7 @@ function emptyDraft() {
   return {
     client_name: '',
     phone: '+998',
+    phone2: '+998',
     location_text: '',
     pond_area_ha: '',
     last_year_feed_kg: '',
@@ -294,6 +362,7 @@ export default {
     const loading = ref(true);
     const error = ref('');
     const plans = ref([]);
+    const comparison = ref([]);
     const plan = ref(null);
     const clients = ref([]);
     const newYear = ref(new Date().getFullYear() + 1);
@@ -333,6 +402,7 @@ export default {
           window.axios.get(`${apiBase.value}/clients`),
         ]);
         plans.value = planData.plans || [];
+        comparison.value = planData.comparison || [];
         clients.value = clientData.clients || [];
         if (plans.value.length) {
           await selectPlan(plans.value[0].id);
@@ -362,10 +432,8 @@ export default {
           title: t('vengerFeedPlanDefaultTitle', { year: newYear.value }),
         });
         showSaved(t('saved'));
-        plans.value = [data, ...plans.value.filter((p) => p.id !== data.id)]
-          .map((p) => (p.id === data.id ? { ...p, rows_count: p.rows?.length || 0 } : p))
-          .sort((a, b) => b.year - a.year);
-        plan.value = data;
+        await refreshPlansMeta();
+        await selectPlan(data.id);
       } catch (e) {
         const errors = e.response?.data?.errors;
         window.alert(errors ? Object.values(errors).flat().join(' ') : (e.response?.data?.message || t('noData')));
@@ -383,6 +451,7 @@ export default {
       draft.venger_client_id = c.id;
       draft.client_name = c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim();
       draft.phone = c.phone || '+998';
+      draft.phone2 = c.phone2 || '+998';
       draft.location_text = [c.region, c.district].filter(Boolean).join(', ') || c.address || '';
     }
 
@@ -401,11 +470,17 @@ export default {
         rowError.value = t('phoneIncompleteFull');
         return;
       }
+      const phone2 = isCompletePhone(draft.phone2) ? draft.phone2 : null;
+      if (draft.phone2 && draft.phone2 !== '+998' && !phone2) {
+        rowError.value = t('phoneIncompleteFull');
+        return;
+      }
       savingRow.value = true;
       try {
         const payload = {
           client_name: draft.client_name.trim(),
           phone: draft.phone,
+          phone2,
           location_text: draft.location_text || null,
           pond_area_ha: numOrNull(draft.pond_area_ha),
           last_year_feed_kg: numOrNull(draft.last_year_feed_kg),
@@ -420,6 +495,7 @@ export default {
         await window.axios.post(`${apiBase.value}/feed-plans/${plan.value.id}/rows`, payload);
         showSaved(t('saved'));
         resetDraft();
+        await refreshPlansMeta();
         await selectPlan(plan.value.id);
         const { data: clientData } = await window.axios.get(`${apiBase.value}/clients`);
         clients.value = clientData.clients || [];
@@ -434,6 +510,7 @@ export default {
     async function patchRow(row, patch) {
       try {
         await window.axios.put(`${apiBase.value}/feed-plans/${plan.value.id}/rows/${row.id}`, patch);
+        await refreshPlansMeta();
         await selectPlan(plan.value.id);
       } catch (e) {
         const errors = e.response?.data?.errors;
@@ -442,10 +519,47 @@ export default {
       }
     }
 
+    async function patchPhone2(row, raw) {
+      const value = String(raw || '').trim();
+      if (!value || value === '+998') {
+        await patchRow(row, { phone2: null });
+        return;
+      }
+      if (!isCompletePhone(value)) {
+        window.alert(t('phoneIncompleteFull'));
+        await selectPlan(plan.value.id);
+        return;
+      }
+      await patchRow(row, { phone2: value });
+    }
+
+    async function refreshPlansMeta() {
+      const { data } = await window.axios.get(`${apiBase.value}/feed-plans`);
+      plans.value = data.plans || [];
+      comparison.value = data.comparison || [];
+    }
+
+    function growthLabel(pct) {
+      if (pct == null) return '—';
+      const n = Number(pct);
+      if (!Number.isFinite(n)) return '—';
+      const sign = n > 0 ? '+' : '';
+      return `${sign}${n}%`;
+    }
+
+    function growthClass(pct) {
+      if (pct == null) return 'is-flat';
+      const n = Number(pct);
+      if (n > 0) return 'is-up';
+      if (n < 0) return 'is-down';
+      return 'is-flat';
+    }
+
     async function removeRow(row) {
       if (!confirm(t('vengerFeedPlanConfirmDelete', { name: row.client_name }))) return;
       await window.axios.delete(`${apiBase.value}/feed-plans/${plan.value.id}/rows/${row.id}`);
       showSaved(t('deleted'));
+      await refreshPlansMeta();
       await selectPlan(plan.value.id);
     }
 
@@ -530,6 +644,7 @@ export default {
       loading,
       error,
       plans,
+      comparison,
       plan,
       clients,
       newYear,
@@ -548,6 +663,9 @@ export default {
       applyPickedClient,
       addRow,
       patchRow,
+      patchPhone2,
+      growthLabel,
+      growthClass,
       removeRow,
       exportExcel,
     };
@@ -681,4 +799,16 @@ export default {
   background: #fff;
 }
 .mono { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vfp-compare h2 { margin: 0 0 0.35rem; font-size: 1.05rem; }
+.vfp-table--compare { min-width: 820px; }
+.vfp-vs { display: block; color: #667085; font-weight: 500; margin-top: 0.15rem; }
+.vfp-growth {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.vfp-growth.is-up { color: #0d6b3f; }
+.vfp-growth.is-down { color: #b42318; }
+.vfp-growth.is-flat { color: #667085; }
 </style>
