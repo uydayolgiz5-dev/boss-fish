@@ -224,7 +224,7 @@ const messages = {
         ownerVengerResultsBrowseHint: 'Barcha natijalar shu yerda: mijoz qidirmasdan jarayon va yakunlanganlarni ko‘ring.',
         ownerVengerFishStocked: 'Yemda boqilgan baliq',
         ownerVengerYearlyTitle: 'Yillar kesimi',
-        ownerVengerYearlyHint: 'Har yili qancha natija, baliq solingan va yem sarflangan.',
+        ownerVengerYearlyHint: 'Har yili yemda boqilgan baliq soni, maydon va yem (tonna).',
         pieces: 'dona',
         vengerFeedPlanNav: 'Yem reja',
         vengerFeedPlanCardAction: 'Ochish',

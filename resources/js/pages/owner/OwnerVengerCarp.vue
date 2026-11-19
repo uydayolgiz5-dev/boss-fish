@@ -18,7 +18,7 @@
     <template v-else>
       <section class="ov-kpis">
         <router-link class="ov-kpi" :to="{ name: 'owner-venger-clients' }">
-          <span>{{ $t('vengerClientsTitle') }}</span>
+          <span>{{ $t('vengerFeedPlanCompareClients') }}</span>
           <strong>{{ number(stats.clients_count) }}</strong>
         </router-link>
         <div class="ov-kpi">
@@ -31,18 +31,6 @@
           <strong>{{ number(stats.fish_stocked ?? analytics.totals?.fish_stocked) }}</strong>
           <small>{{ $t('pieces') }}</small>
         </div>
-        <router-link class="ov-kpi ov-kpi--open" :to="{ name: 'owner-venger-ponds', query: { tab: 'open' } }">
-          <span>{{ $t('vengerPondsTabOpen') }}</span>
-          <strong>{{ number(stats.ponds_open) }}</strong>
-        </router-link>
-        <router-link class="ov-kpi ov-kpi--done" :to="{ name: 'owner-venger-ponds', query: { tab: 'final' } }">
-          <span>{{ $t('vengerPondsTabDone') }}</span>
-          <strong>{{ number(stats.ponds_final) }}</strong>
-        </router-link>
-        <router-link class="ov-kpi" :to="{ name: 'owner-venger-feed-plan' }">
-          <span>{{ $t('vengerFeedPlanNav') }}</span>
-          <strong>{{ $t('vengerFeedPlanCardAction') }}</strong>
-        </router-link>
       </section>
 
       <section class="panel ov-year-panel">
@@ -59,7 +47,6 @@
             <thead>
               <tr>
                 <th>{{ $t('vengerFeedPlanCompareYear') }}</th>
-                <th class="num">{{ $t('vengerResultsTitle') }}</th>
                 <th class="num">{{ $t('ownerVengerFishStocked') }}</th>
                 <th class="num">{{ $t('ownerVengerTotalArea') }}</th>
                 <th class="num">{{ $t('vengerFeedExtruder') }}</th>
@@ -70,22 +57,25 @@
             <tbody>
               <tr v-for="row in yearRows" :key="row.year">
                 <td><strong>{{ row.year }}</strong></td>
-                <td class="num">
-                  {{ number(row.total) }}
-                  <small class="ov-sub">{{ number(row.open) }} / {{ number(row.final) }}</small>
-                </td>
                 <td class="num">{{ number(row.fish_stocked) }}</td>
                 <td class="num">{{ fmt(row.area_ha, 2) }} ha</td>
                 <td class="num">{{ fmtTon(row.extruder_kg) }}</td>
                 <td class="num">{{ fmtTon(row.granula_kg) }}</td>
-                <td class="num"><strong>{{ fmtTon(row.feed_kg || ((row.extruder_kg || 0) + (row.granula_kg || 0))) }}</strong></td>
+                <td class="num"><strong>{{ fmtTon(rowFeedKg(row)) }}</strong></td>
               </tr>
             </tbody>
+            <tfoot v-if="yearRows.length > 1">
+              <tr>
+                <td><strong>{{ $t('total') }}</strong></td>
+                <td class="num"><strong>{{ number(yearTotals.fish_stocked) }}</strong></td>
+                <td class="num"><strong>{{ fmt(yearTotals.area_ha, 2) }} ha</strong></td>
+                <td class="num"><strong>{{ fmtTon(yearTotals.extruder_kg) }}</strong></td>
+                <td class="num"><strong>{{ fmtTon(yearTotals.granula_kg) }}</strong></td>
+                <td class="num"><strong>{{ fmtTon(yearTotals.feed_kg) }}</strong></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
-        <p v-if="yearRows.length" class="ov-legend">
-          {{ $t('vengerPondsTabOpen') }} / {{ $t('vengerPondsTabDone') }}
-        </p>
       </section>
 
       <section class="panel ov-region-panel">
@@ -132,14 +122,32 @@ export default {
     });
     const stats = ref({
       clients_count: 0,
-      ponds_open: 0,
-      ponds_final: 0,
       area_ha: 0,
       fish_stocked: 0,
     });
 
     const regionBars = computed(() => withPct(analytics.value.clients_by_region || []));
     const yearRows = computed(() => [...(analytics.value.results_by_year || [])].reverse());
+    const yearTotals = computed(() => {
+      const rows = analytics.value.results_by_year || [];
+      return rows.reduce(
+        (acc, row) => {
+          acc.fish_stocked += Number(row.fish_stocked || 0);
+          acc.area_ha += Number(row.area_ha || 0);
+          acc.extruder_kg += Number(row.extruder_kg || 0);
+          acc.granula_kg += Number(row.granula_kg || 0);
+          acc.feed_kg += rowFeedKg(row);
+          return acc;
+        },
+        { fish_stocked: 0, area_ha: 0, extruder_kg: 0, granula_kg: 0, feed_kg: 0 },
+      );
+    });
+
+    function rowFeedKg(row) {
+      const feed = Number(row?.feed_kg || 0);
+      if (feed > 0) return feed;
+      return Number(row?.extruder_kg || 0) + Number(row?.granula_kg || 0);
+    }
 
     function number(value) {
       const n = Number(value || 0);
@@ -184,6 +192,8 @@ export default {
       analytics,
       regionBars,
       yearRows,
+      yearTotals,
+      rowFeedKg,
       number,
       fmt,
       fmtTon,
@@ -215,8 +225,6 @@ export default {
 .ov-kpi span { font-size: 0.8rem; color: #5b6b60; font-weight: 650; }
 .ov-kpi strong { font-size: 1.45rem; font-variant-numeric: tabular-nums; line-height: 1.15; }
 .ov-kpi small { color: #667085; font-size: 0.78rem; }
-.ov-kpi--open { border-color: rgba(13, 107, 63, 0.28); background: #f3faf6; }
-.ov-kpi--done { border-color: rgba(21, 101, 192, 0.22); background: #f4f8fc; }
 .ov-year-panel,
 .ov-region-panel {
   margin-bottom: 1rem;
@@ -229,7 +237,7 @@ export default {
 .ov-year-panel__head { margin-bottom: 0.75rem; }
 .ov-year-table {
   width: 100%;
-  min-width: 720px;
+  min-width: 640px;
   border-collapse: collapse;
   border: 1.5px solid rgba(15, 23, 42, 0.28);
 }
@@ -245,20 +253,13 @@ export default {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+.ov-year-table tfoot td {
+  background: #f8faf9;
+  border-top: 2px solid rgba(15, 23, 42, 0.28);
+}
 .ov-year-table .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
-}
-.ov-sub {
-  display: block;
-  margin-top: 0.15rem;
-  color: #667085;
-  font-size: 0.75rem;
-}
-.ov-legend {
-  margin: 0.65rem 0 0;
-  color: #667085;
-  font-size: 0.8rem;
 }
 .ov-hbar-list { display: grid; gap: 0.65rem; }
 .ov-hbar__label {
