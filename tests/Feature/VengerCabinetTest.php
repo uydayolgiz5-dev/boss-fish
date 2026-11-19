@@ -95,12 +95,14 @@ class VengerCabinetTest extends TestCase
             ->assertJsonPath('login_path', '/kirish')
             ->assertJsonPath('stats.staff_count', 1)
             ->assertJsonStructure([
-                'stats' => ['ponds_open', 'ponds_final', 'clients_count'],
+                'stats' => ['ponds_open', 'ponds_final', 'clients_count', 'plan_feed_kg', 'result_feed_kg'],
                 'staff' => [['clients_count', 'open_count', 'final_count']],
                 'recent_activity',
                 'analytics' => [
                     'clients_by_region',
                     'clients_by_district',
+                    'years',
+                    'plans_by_year',
                     'results_by_year',
                     'feed_types' => [['type', 'label', 'kg']],
                     'averages' => [
@@ -109,7 +111,16 @@ class VengerCabinetTest extends TestCase
                         'yield_per_ha_kg',
                         'completion_rate',
                     ],
-                    'totals' => ['feed_kg', 'extruder_kg', 'granula_kg', 'biomass_gain_kg', 'area_ha', 'regions_count'],
+                    'totals' => [
+                        'plan_feed_kg',
+                        'result_feed_kg',
+                        'feed_kg',
+                        'extruder_kg',
+                        'granula_kg',
+                        'biomass_gain_kg',
+                        'area_ha',
+                        'regions_count',
+                    ],
                 ],
             ]);
 

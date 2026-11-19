@@ -31,50 +31,92 @@
           <strong>{{ number(stats.fish_stocked ?? analytics.totals?.fish_stocked) }}</strong>
           <small>{{ $t('pieces') }}</small>
         </div>
+        <div class="ov-kpi ov-kpi--plan">
+          <span>{{ $t('ownerVengerPlanFeed') }}</span>
+          <strong>{{ fmtTon(stats.plan_feed_kg ?? analytics.totals?.plan_feed_kg) }}</strong>
+          <small>{{ $t('ownerVengerFromFeedPlan') }}</small>
+        </div>
+        <div class="ov-kpi ov-kpi--result">
+          <span>{{ $t('ownerVengerResultFeed') }}</span>
+          <strong>{{ fmtTon(stats.result_feed_kg ?? analytics.totals?.result_feed_kg) }}</strong>
+          <small>{{ $t('ownerVengerFromResults') }}</small>
+        </div>
       </section>
 
-      <section class="panel ov-year-panel">
-        <div class="ov-year-panel__head">
-          <div>
-            <h2>{{ $t('ownerVengerYearlyTitle') }}</h2>
-            <p class="field-hint">{{ $t('ownerVengerYearlyHint') }}</p>
-          </div>
+      <section class="panel ov-flow-panel">
+        <div class="ov-flow-panel__head">
+          <h2>{{ $t('ownerVengerYearlyTitle') }}</h2>
+          <p class="field-hint">{{ $t('ownerVengerYearlyHint') }}</p>
         </div>
 
         <div v-if="!yearRows.length" class="empty">{{ $t('ownerVengerNoChartData') }}</div>
-        <div v-else class="table-scroll">
-          <table class="ov-year-table">
-            <thead>
-              <tr>
-                <th>{{ $t('vengerFeedPlanCompareYear') }}</th>
-                <th class="num">{{ $t('ownerVengerFishStocked') }}</th>
-                <th class="num">{{ $t('ownerVengerTotalArea') }}</th>
-                <th class="num">{{ $t('vengerFeedExtruder') }}</th>
-                <th class="num">{{ $t('vengerFeedGranula') }}</th>
-                <th class="num">{{ $t('ownerVengerTotalFeed') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in yearRows" :key="row.year">
-                <td><strong>{{ row.year }}</strong></td>
-                <td class="num">{{ number(row.fish_stocked) }}</td>
-                <td class="num">{{ fmt(row.area_ha, 2) }} ha</td>
-                <td class="num">{{ fmtTon(row.extruder_kg) }}</td>
-                <td class="num">{{ fmtTon(row.granula_kg) }}</td>
-                <td class="num"><strong>{{ fmtTon(rowFeedKg(row)) }}</strong></td>
-              </tr>
-            </tbody>
-            <tfoot v-if="yearRows.length > 1">
-              <tr>
-                <td><strong>{{ $t('total') }}</strong></td>
-                <td class="num"><strong>{{ number(yearTotals.fish_stocked) }}</strong></td>
-                <td class="num"><strong>{{ fmt(yearTotals.area_ha, 2) }} ha</strong></td>
-                <td class="num"><strong>{{ fmtTon(yearTotals.extruder_kg) }}</strong></td>
-                <td class="num"><strong>{{ fmtTon(yearTotals.granula_kg) }}</strong></td>
-                <td class="num"><strong>{{ fmtTon(yearTotals.feed_kg) }}</strong></td>
-              </tr>
-            </tfoot>
-          </table>
+
+        <div v-else class="ov-flow">
+          <article v-for="(row, idx) in yearRows" :key="row.year" class="ov-year">
+            <div class="ov-year__badge">{{ row.year }}</div>
+
+            <div class="ov-algo">
+              <div class="ov-algo__step">
+                <span>{{ $t('vengerFeedPlanCompareClients') }}</span>
+                <strong>{{ number(row.clients_count) }}</strong>
+              </div>
+              <div class="ov-algo__arrow" aria-hidden="true">→</div>
+              <div class="ov-algo__step">
+                <span>{{ $t('ownerVengerTotalArea') }}</span>
+                <strong>{{ fmt(row.area_ha, 2) }} <small>ha</small></strong>
+              </div>
+              <div class="ov-algo__arrow" aria-hidden="true">→</div>
+              <div class="ov-algo__step ov-algo__step--focus">
+                <span>{{ $t('ownerVengerFishStocked') }}</span>
+                <strong>{{ number(row.fish_stocked) }} <small>{{ $t('pieces') }}</small></strong>
+              </div>
+            </div>
+
+            <div class="ov-algo ov-algo--feed">
+              <div class="ov-algo__step ov-algo__step--plan">
+                <span>{{ $t('vengerFeedExtruder') }}</span>
+                <strong>{{ fmtTon(row.plan_extruder_kg) }}</strong>
+              </div>
+              <div class="ov-algo__plus" aria-hidden="true">+</div>
+              <div class="ov-algo__step ov-algo__step--plan">
+                <span>{{ $t('vengerFeedGranula') }}</span>
+                <strong>{{ fmtTon(row.plan_granula_kg) }}</strong>
+              </div>
+              <div class="ov-algo__arrow" aria-hidden="true">=</div>
+              <div class="ov-algo__step ov-algo__step--plan-total">
+                <span>{{ $t('ownerVengerPlanFeed') }}</span>
+                <strong>{{ fmtTon(row.plan_feed_kg) }}</strong>
+              </div>
+            </div>
+
+            <div class="ov-result-line">
+              <div class="ov-result-line__label">
+                <span>{{ $t('ownerVengerResultFeed') }}</span>
+                <em>{{ $t('ownerVengerResultFeedHint') }}</em>
+              </div>
+              <div class="ov-result-line__vals">
+                <span>{{ $t('vengerFeedExtruder') }}: {{ fmtTon(row.result_extruder_kg) }}</span>
+                <span>{{ $t('vengerFeedGranula') }}: {{ fmtTon(row.result_granula_kg) }}</span>
+                <strong>{{ fmtTon(row.result_feed_kg) }}</strong>
+              </div>
+              <div class="ov-compare">
+                <div class="ov-compare__track">
+                  <div
+                    class="ov-compare__plan"
+                    :style="{ width: barPct(row.plan_feed_kg, row) + '%' }"
+                    :title="$t('ownerVengerPlanFeed')"
+                  />
+                  <div
+                    class="ov-compare__result"
+                    :style="{ width: barPct(row.result_feed_kg, row) + '%' }"
+                    :title="$t('ownerVengerResultFeed')"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div v-if="idx < yearRows.length - 1" class="ov-flow__next" aria-hidden="true">↓</div>
+          </article>
         </div>
       </section>
 
@@ -117,37 +159,19 @@ export default {
     const error = ref('');
     const analytics = ref({
       clients_by_region: [],
-      results_by_year: [],
+      years: [],
       totals: {},
     });
     const stats = ref({
       clients_count: 0,
       area_ha: 0,
       fish_stocked: 0,
+      plan_feed_kg: 0,
+      result_feed_kg: 0,
     });
 
     const regionBars = computed(() => withPct(analytics.value.clients_by_region || []));
-    const yearRows = computed(() => [...(analytics.value.results_by_year || [])].reverse());
-    const yearTotals = computed(() => {
-      const rows = analytics.value.results_by_year || [];
-      return rows.reduce(
-        (acc, row) => {
-          acc.fish_stocked += Number(row.fish_stocked || 0);
-          acc.area_ha += Number(row.area_ha || 0);
-          acc.extruder_kg += Number(row.extruder_kg || 0);
-          acc.granula_kg += Number(row.granula_kg || 0);
-          acc.feed_kg += rowFeedKg(row);
-          return acc;
-        },
-        { fish_stocked: 0, area_ha: 0, extruder_kg: 0, granula_kg: 0, feed_kg: 0 },
-      );
-    });
-
-    function rowFeedKg(row) {
-      const feed = Number(row?.feed_kg || 0);
-      if (feed > 0) return feed;
-      return Number(row?.extruder_kg || 0) + Number(row?.granula_kg || 0);
-    }
+    const yearRows = computed(() => [...(analytics.value.years || [])].reverse());
 
     function number(value) {
       const n = Number(value || 0);
@@ -167,6 +191,13 @@ export default {
       const n = Number(kg || 0);
       if (!Number.isFinite(n) || n <= 0) return '0 t';
       return `${fmt(n / 1000, 2)} t`;
+    }
+
+    function barPct(kg, row) {
+      const max = Math.max(Number(row?.plan_feed_kg || 0), Number(row?.result_feed_kg || 0), 1);
+      const n = Number(kg || 0);
+      if (!Number.isFinite(n) || n <= 0) return 0;
+      return Math.max(Math.round((n / max) * 100), 4);
     }
 
     async function load() {
@@ -192,11 +223,10 @@ export default {
       analytics,
       regionBars,
       yearRows,
-      yearTotals,
-      rowFeedKg,
       number,
       fmt,
       fmtTon,
+      barPct,
     };
   },
 };
@@ -206,7 +236,7 @@ export default {
 .muted { color: #5b6b60; margin: 0.25rem 0 0; }
 .ov-kpis {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
@@ -222,45 +252,159 @@ export default {
   text-decoration: none;
   color: inherit;
 }
-.ov-kpi span { font-size: 0.8rem; color: #5b6b60; font-weight: 650; }
-.ov-kpi strong { font-size: 1.45rem; font-variant-numeric: tabular-nums; line-height: 1.15; }
-.ov-kpi small { color: #667085; font-size: 0.78rem; }
-.ov-year-panel,
-.ov-region-panel {
-  margin-bottom: 1rem;
-}
-.ov-year-panel h2,
+.ov-kpi span { font-size: 0.78rem; color: #5b6b60; font-weight: 650; }
+.ov-kpi strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.ov-kpi small { color: #667085; font-size: 0.74rem; }
+.ov-kpi--plan { border-color: rgba(13, 107, 63, 0.28); background: #f3faf6; }
+.ov-kpi--result { border-color: rgba(180, 83, 9, 0.28); background: #fffaf3; }
+
+.ov-flow-panel,
+.ov-region-panel { margin-bottom: 1rem; }
+.ov-flow-panel h2,
 .ov-region-panel h2 {
   margin: 0 0 0.35rem;
   font-size: 1.05rem;
 }
-.ov-year-panel__head { margin-bottom: 0.75rem; }
-.ov-year-table {
-  width: 100%;
-  min-width: 640px;
-  border-collapse: collapse;
-  border: 1.5px solid rgba(15, 23, 42, 0.28);
+.ov-flow-panel__head { margin-bottom: 1rem; }
+
+.ov-flow { display: grid; gap: 0.35rem; }
+.ov-year {
+  position: relative;
+  padding: 1rem 1.05rem 1.1rem;
+  border: 1.5px solid rgba(15, 23, 42, 0.14);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fbfcfb 0%, #f4f7f5 100%);
 }
-.ov-year-table th,
-.ov-year-table td {
-  border: 1px solid rgba(15, 23, 42, 0.2);
-  padding: 0.65rem 0.7rem;
-  vertical-align: middle;
+.ov-year__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.2rem;
+  margin-bottom: 0.85rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: #0d6b3f;
+  color: #fff;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
-.ov-year-table thead th {
-  background: #f3f4f6;
-  font-size: 0.74rem;
+
+.ov-algo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+.ov-algo--feed { margin-bottom: 0.85rem; }
+.ov-algo__step {
+  flex: 1 1 7.5rem;
+  min-width: 7rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.ov-algo__step span {
+  font-size: 0.72rem;
+  color: #5b6b60;
+  font-weight: 650;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
-.ov-year-table tfoot td {
-  background: #f8faf9;
-  border-top: 2px solid rgba(15, 23, 42, 0.28);
-}
-.ov-year-table .num {
-  text-align: right;
+.ov-algo__step strong {
+  font-size: 1.12rem;
   font-variant-numeric: tabular-nums;
+  line-height: 1.2;
 }
+.ov-algo__step small {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #667085;
+}
+.ov-algo__step--focus {
+  border-color: rgba(13, 107, 63, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(13, 107, 63, 0.08);
+}
+.ov-algo__step--plan { background: #f3faf6; border-color: rgba(13, 107, 63, 0.2); }
+.ov-algo__step--plan-total {
+  background: #0d6b3f;
+  border-color: #0d6b3f;
+  color: #fff;
+}
+.ov-algo__step--plan-total span { color: rgba(255, 255, 255, 0.78); }
+.ov-algo__step--plan-total strong { color: #fff; }
+.ov-algo__arrow,
+.ov-algo__plus {
+  align-self: center;
+  color: #667085;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 0 0.1rem;
+}
+
+.ov-result-line {
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(180, 83, 9, 0.4);
+  background: #fffaf3;
+}
+.ov-result-line__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.75rem;
+  margin-bottom: 0.45rem;
+}
+.ov-result-line__label span {
+  font-weight: 750;
+  color: #9a3412;
+}
+.ov-result-line__label em {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: #9a6a3a;
+}
+.ov-result-line__vals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  color: #5b4632;
+  margin-bottom: 0.55rem;
+}
+.ov-result-line__vals strong {
+  margin-left: auto;
+  font-size: 1.05rem;
+  color: #9a3412;
+}
+.ov-compare__track {
+  display: grid;
+  gap: 0.28rem;
+}
+.ov-compare__plan,
+.ov-compare__result {
+  height: 8px;
+  border-radius: 999px;
+  max-width: 100%;
+}
+.ov-compare__plan { background: #0d6b3f; }
+.ov-compare__result { background: #d97706; }
+
+.ov-flow__next {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  line-height: 1;
+  margin: 0.15rem 0;
+}
+
 .ov-hbar-list { display: grid; gap: 0.65rem; }
 .ov-hbar__label {
   display: flex;
@@ -280,10 +424,16 @@ export default {
   border-radius: inherit;
   background: #0d6b3f;
 }
-@media (max-width: 900px) {
-  .ov-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (max-width: 1100px) {
+  .ov-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-@media (max-width: 560px) {
+@media (max-width: 720px) {
+  .ov-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ov-algo__arrow { display: none; }
+  .ov-result-line__vals strong { margin-left: 0; }
+}
+@media (max-width: 480px) {
   .ov-kpis { grid-template-columns: 1fr; }
 }
 </style>

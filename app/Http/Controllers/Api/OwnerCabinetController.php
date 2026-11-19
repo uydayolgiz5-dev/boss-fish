@@ -808,51 +808,47 @@ class OwnerCabinetController extends Controller
 
         $fcrValues = [];
         $gainValues = [];
-        $feedValues = [];
-        $areaValues = [];
+        $resultFeedValues = [];
+        $resultAreaValues = [];
         $yieldValues = [];
-        $feedTypeKg = ['extruder' => 0.0, 'granula' => 0.0];
-        $fishStockedTotal = 0;
-        $yearBuckets = [];
+        $resultFeedTypeKg = ['extruder' => 0.0, 'granula' => 0.0];
+        $resultFishStockedTotal = 0;
+        $resultYearBuckets = [];
 
         foreach ($allResults as $result) {
             $yearDate = $result->sold_on ?? $result->stocked_on ?? $result->created_at;
             $year = $yearDate ? (int) $yearDate->format('Y') : (int) now()->format('Y');
-            if (! isset($yearBuckets[$year])) {
-                $yearBuckets[$year] = [
+            if (! isset($resultYearBuckets[$year])) {
+                $resultYearBuckets[$year] = [
                     'year' => $year,
                     'open' => 0,
                     'final' => 0,
                     'total' => 0,
                     'fish_stocked' => 0,
-                    'feed_kg' => 0.0,
-                    'extruder_kg' => 0.0,
-                    'granula_kg' => 0.0,
                     'area_ha' => 0.0,
+                    'result_feed_kg' => 0.0,
+                    'result_extruder_kg' => 0.0,
+                    'result_granula_kg' => 0.0,
                 ];
             }
-            $yearBuckets[$year]['total']++;
+            $resultYearBuckets[$year]['total']++;
             if ($result->status === \App\Models\VengerResult::STATUS_FINAL) {
-                $yearBuckets[$year]['final']++;
+                $resultYearBuckets[$year]['final']++;
             } elseif ($result->status === \App\Models\VengerResult::STATUS_ACTIVE) {
-                $yearBuckets[$year]['open']++;
+                $resultYearBuckets[$year]['open']++;
             }
 
             $metrics = $result->metrics();
-            $areaValues[] = (float) $result->area_ha;
-            $yearBuckets[$year]['area_ha'] += (float) $result->area_ha;
+            $resultAreaValues[] = (float) $result->area_ha;
+            $resultYearBuckets[$year]['area_ha'] += (float) $result->area_ha;
 
             $stockedPieces = (int) ($metrics['stocked_pieces'] ?? 0);
             if ($stockedPieces <= 0 && $result->relationLoaded('fish')) {
                 $stockedPieces = (int) $result->fish->sum('stocked_pieces');
             }
-            $fishStockedTotal += $stockedPieces;
-            $yearBuckets[$year]['fish_stocked'] += $stockedPieces;
+            $resultFishStockedTotal += $stockedPieces;
+            $resultYearBuckets[$year]['fish_stocked'] += $stockedPieces;
 
-            if ((float) $result->feed_kg > 0) {
-                $feedValues[] = (float) $result->feed_kg;
-                $yearBuckets[$year]['feed_kg'] += (float) $result->feed_kg;
-            }
             if (($metrics['fcr'] ?? null) !== null) {
                 $fcrValues[] = (float) $metrics['fcr'];
             }
@@ -864,35 +860,117 @@ class OwnerCabinetController extends Controller
                 $yieldValues[] = (float) $metrics['yield_per_ha_kg'];
             }
 
+            $typedFeedKg = 0.0;
             $feeds = $result->feeds ?? [];
             if ($feeds !== []) {
                 foreach ($feeds as $feedRow) {
                     $type = \App\Support\VengerFeedTypes::normalize($feedRow['type'] ?? null);
                     $kg = (float) ($feedRow['kg'] ?? 0);
+                    if ($kg <= 0) {
+                        continue;
+                    }
+                    $typedFeedKg += $kg;
                     if ($type === \App\Support\VengerFeedTypes::EXTRUDER) {
-                        $feedTypeKg['extruder'] += $kg;
-                        $yearBuckets[$year]['extruder_kg'] += $kg;
+                        $resultFeedTypeKg['extruder'] += $kg;
+                        $resultYearBuckets[$year]['result_extruder_kg'] += $kg;
                     } elseif ($type === \App\Support\VengerFeedTypes::GRANULA) {
-                        $feedTypeKg['granula'] += $kg;
-                        $yearBuckets[$year]['granula_kg'] += $kg;
+                        $resultFeedTypeKg['granula'] += $kg;
+                        $resultYearBuckets[$year]['result_granula_kg'] += $kg;
                     }
                 }
-            } elseif ((float) $result->feed_kg > 0) {
-                // Legacy rows without typed feeds — skip type split
+            }
+
+            $resultFeedKg = $typedFeedKg > 0 ? $typedFeedKg : (float) $result->feed_kg;
+            if ($resultFeedKg > 0) {
+                $resultFeedValues[] = $resultFeedKg;
+                $resultYearBuckets[$year]['result_feed_kg'] += $resultFeedKg;
             }
         }
 
-        foreach ($yearBuckets as &$bucket) {
+        foreach ($resultYearBuckets as &$bucket) {
             $bucket['area_ha'] = round((float) $bucket['area_ha'], 2);
-            $bucket['feed_kg'] = round((float) $bucket['feed_kg'], 1);
-            $bucket['extruder_kg'] = round((float) $bucket['extruder_kg'], 1);
-            $bucket['granula_kg'] = round((float) $bucket['granula_kg'], 1);
+            $bucket['result_feed_kg'] = round((float) $bucket['result_feed_kg'], 1);
+            $bucket['result_extruder_kg'] = round((float) $bucket['result_extruder_kg'], 1);
+            $bucket['result_granula_kg'] = round((float) $bucket['result_granula_kg'], 1);
             $bucket['fish_stocked'] = (int) $bucket['fish_stocked'];
+            // Legacy keys for older clients — result feed only, not mixed with plans.
+            $bucket['feed_kg'] = $bucket['result_feed_kg'];
+            $bucket['extruder_kg'] = $bucket['result_extruder_kg'];
+            $bucket['granula_kg'] = $bucket['result_granula_kg'];
         }
         unset($bucket);
 
-        ksort($yearBuckets);
-        $resultsByYear = array_values($yearBuckets);
+        ksort($resultYearBuckets);
+        $resultsByYear = array_values($resultYearBuckets);
+
+        // Asosiy yillik statistika — yem rejasidan (har mijoz uchun yozilgan reja).
+        $feedPlans = \App\Models\VengerFeedPlan::query()
+            ->with('rows')
+            ->orderBy('year')
+            ->get();
+
+        $yearsMap = [];
+        foreach ($feedPlans as $plan) {
+            $rows = $plan->rows;
+            $year = (int) $plan->year;
+            $planExtruder = (float) $rows->sum('next_year_extruder_kg');
+            $planGranula = (float) $rows->sum('next_year_granule_kg');
+            $yearsMap[$year] = [
+                'year' => $year,
+                'clients_count' => $rows->count(),
+                'area_ha' => round((float) $rows->sum('pond_area_ha'), 2),
+                'fish_stocked' => (int) $rows->sum('next_year_carp_count'),
+                'plan_extruder_kg' => round($planExtruder, 1),
+                'plan_granula_kg' => round($planGranula, 1),
+                'plan_feed_kg' => round($planExtruder + $planGranula, 1),
+                'result_feed_kg' => 0.0,
+                'result_extruder_kg' => 0.0,
+                'result_granula_kg' => 0.0,
+                'results_total' => 0,
+                'results_open' => 0,
+                'results_final' => 0,
+            ];
+        }
+
+        foreach ($resultYearBuckets as $year => $resultBucket) {
+            if (! isset($yearsMap[$year])) {
+                $yearsMap[$year] = [
+                    'year' => (int) $year,
+                    'clients_count' => 0,
+                    'area_ha' => 0.0,
+                    'fish_stocked' => 0,
+                    'plan_extruder_kg' => 0.0,
+                    'plan_granula_kg' => 0.0,
+                    'plan_feed_kg' => 0.0,
+                    'result_feed_kg' => 0.0,
+                    'result_extruder_kg' => 0.0,
+                    'result_granula_kg' => 0.0,
+                    'results_total' => 0,
+                    'results_open' => 0,
+                    'results_final' => 0,
+                ];
+            }
+            $yearsMap[$year]['result_feed_kg'] = (float) $resultBucket['result_feed_kg'];
+            $yearsMap[$year]['result_extruder_kg'] = (float) $resultBucket['result_extruder_kg'];
+            $yearsMap[$year]['result_granula_kg'] = (float) $resultBucket['result_granula_kg'];
+            $yearsMap[$year]['results_total'] = (int) $resultBucket['total'];
+            $yearsMap[$year]['results_open'] = (int) $resultBucket['open'];
+            $yearsMap[$year]['results_final'] = (int) $resultBucket['final'];
+        }
+
+        ksort($yearsMap);
+        $yearsFlow = array_values($yearsMap);
+        $latestPlanYear = collect($yearsFlow)
+            ->filter(fn (array $row) => ($row['clients_count'] ?? 0) > 0 || ($row['plan_feed_kg'] ?? 0) > 0 || ($row['fish_stocked'] ?? 0) > 0)
+            ->last();
+
+        $planFeedTotal = round((float) collect($yearsFlow)->sum('plan_feed_kg'), 1);
+        $planExtruderTotal = round((float) collect($yearsFlow)->sum('plan_extruder_kg'), 1);
+        $planGranulaTotal = round((float) collect($yearsFlow)->sum('plan_granula_kg'), 1);
+        $planFishTotal = (int) collect($yearsFlow)->sum('fish_stocked');
+        $planAreaLatest = $latestPlanYear ? (float) $latestPlanYear['area_ha'] : 0.0;
+        $planFishLatest = $latestPlanYear ? (int) $latestPlanYear['fish_stocked'] : 0;
+        $resultFeedTotal = round(array_sum($resultFeedValues), 1);
 
         $avg = static function (array $values, int $decimals = 2): ?float {
             if ($values === []) {
@@ -905,35 +983,60 @@ class OwnerCabinetController extends Controller
         $analytics = [
             'clients_by_region' => $clientsByRegion,
             'clients_by_district' => $clientsByDistrict,
+            'years' => $yearsFlow,
+            'plans_by_year' => collect($yearsFlow)
+                ->map(fn (array $row) => [
+                    'year' => $row['year'],
+                    'clients_count' => $row['clients_count'],
+                    'area_ha' => $row['area_ha'],
+                    'fish_stocked' => $row['fish_stocked'],
+                    'plan_extruder_kg' => $row['plan_extruder_kg'],
+                    'plan_granula_kg' => $row['plan_granula_kg'],
+                    'plan_feed_kg' => $row['plan_feed_kg'],
+                ])
+                ->values()
+                ->all(),
             'results_by_year' => $resultsByYear,
             'feed_types' => [
                 [
                     'type' => 'extruder',
                     'label' => 'Ekstruder',
-                    'kg' => round($feedTypeKg['extruder'], 1),
+                    'kg' => $planExtruderTotal,
+                    'source' => 'plan',
                 ],
                 [
                     'type' => 'granula',
                     'label' => 'Granula',
-                    'kg' => round($feedTypeKg['granula'], 1),
+                    'kg' => $planGranulaTotal,
+                    'source' => 'plan',
                 ],
             ],
             'averages' => [
                 'fcr' => $avg($fcrValues, 2),
-                'area_ha' => $avg($areaValues, 2),
+                'area_ha' => $avg($resultAreaValues, 2),
                 'yield_per_ha_kg' => $avg($yieldValues, 1),
                 'completion_rate' => ($openCount + $finalCount) > 0
                     ? round(($finalCount / ($openCount + $finalCount)) * 100, 1)
                     : null,
             ],
             'totals' => [
-                'feed_kg' => round(array_sum($feedValues), 1),
-                'extruder_kg' => round($feedTypeKg['extruder'], 1),
-                'granula_kg' => round($feedTypeKg['granula'], 1),
+                // Asosiy: yillik yem rejasidan
+                'plan_feed_kg' => $planFeedTotal,
+                'plan_extruder_kg' => $planExtruderTotal,
+                'plan_granula_kg' => $planGranulaTotal,
+                'fish_stocked' => $planFishTotal,
+                'area_ha' => $planAreaLatest,
+                // Alohida: natija qayt etilgan yem
+                'result_feed_kg' => $resultFeedTotal,
+                'result_extruder_kg' => round($resultFeedTypeKg['extruder'], 1),
+                'result_granula_kg' => round($resultFeedTypeKg['granula'], 1),
+                'result_fish_stocked' => $resultFishStockedTotal,
                 'biomass_gain_kg' => round(array_sum($gainValues), 1),
-                'area_ha' => round(array_sum($areaValues), 2),
-                'fish_stocked' => $fishStockedTotal,
                 'regions_count' => $clientsByRegion->count(),
+                // Legacy aliases (plan as primary)
+                'feed_kg' => $planFeedTotal,
+                'extruder_kg' => $planExtruderTotal,
+                'granula_kg' => $planGranulaTotal,
             ],
         ];
 
@@ -949,8 +1052,10 @@ class OwnerCabinetController extends Controller
                 'ponds_open' => $openCount,
                 'ponds_final' => $finalCount,
                 'ponds_total' => $openCount + $finalCount,
-                'area_ha' => round(array_sum($areaValues), 2),
-                'fish_stocked' => $fishStockedTotal,
+                'area_ha' => $planAreaLatest,
+                'fish_stocked' => $planFishLatest,
+                'plan_feed_kg' => $latestPlanYear ? (float) $latestPlanYear['plan_feed_kg'] : 0.0,
+                'result_feed_kg' => $resultFeedTotal,
             ],
             'analytics' => $analytics,
             'staff' => $staff,
