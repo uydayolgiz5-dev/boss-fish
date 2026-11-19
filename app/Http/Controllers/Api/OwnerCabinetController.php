@@ -812,13 +812,24 @@ class OwnerCabinetController extends Controller
         $areaValues = [];
         $yieldValues = [];
         $feedTypeKg = ['extruder' => 0.0, 'granula' => 0.0];
+        $fishStockedTotal = 0;
         $yearBuckets = [];
 
         foreach ($allResults as $result) {
             $yearDate = $result->sold_on ?? $result->stocked_on ?? $result->created_at;
             $year = $yearDate ? (int) $yearDate->format('Y') : (int) now()->format('Y');
             if (! isset($yearBuckets[$year])) {
-                $yearBuckets[$year] = ['year' => $year, 'open' => 0, 'final' => 0, 'total' => 0];
+                $yearBuckets[$year] = [
+                    'year' => $year,
+                    'open' => 0,
+                    'final' => 0,
+                    'total' => 0,
+                    'fish_stocked' => 0,
+                    'feed_kg' => 0.0,
+                    'extruder_kg' => 0.0,
+                    'granula_kg' => 0.0,
+                    'area_ha' => 0.0,
+                ];
             }
             $yearBuckets[$year]['total']++;
             if ($result->status === \App\Models\VengerResult::STATUS_FINAL) {
@@ -829,8 +840,18 @@ class OwnerCabinetController extends Controller
 
             $metrics = $result->metrics();
             $areaValues[] = (float) $result->area_ha;
+            $yearBuckets[$year]['area_ha'] += (float) $result->area_ha;
+
+            $stockedPieces = (int) ($metrics['stocked_pieces'] ?? 0);
+            if ($stockedPieces <= 0 && $result->relationLoaded('fish')) {
+                $stockedPieces = (int) $result->fish->sum('stocked_pieces');
+            }
+            $fishStockedTotal += $stockedPieces;
+            $yearBuckets[$year]['fish_stocked'] += $stockedPieces;
+
             if ((float) $result->feed_kg > 0) {
                 $feedValues[] = (float) $result->feed_kg;
+                $yearBuckets[$year]['feed_kg'] += (float) $result->feed_kg;
             }
             if (($metrics['fcr'] ?? null) !== null) {
                 $fcrValues[] = (float) $metrics['fcr'];
@@ -850,14 +871,25 @@ class OwnerCabinetController extends Controller
                     $kg = (float) ($feedRow['kg'] ?? 0);
                     if ($type === \App\Support\VengerFeedTypes::EXTRUDER) {
                         $feedTypeKg['extruder'] += $kg;
+                        $yearBuckets[$year]['extruder_kg'] += $kg;
                     } elseif ($type === \App\Support\VengerFeedTypes::GRANULA) {
                         $feedTypeKg['granula'] += $kg;
+                        $yearBuckets[$year]['granula_kg'] += $kg;
                     }
                 }
             } elseif ((float) $result->feed_kg > 0) {
                 // Legacy rows without typed feeds — skip type split
             }
         }
+
+        foreach ($yearBuckets as &$bucket) {
+            $bucket['area_ha'] = round((float) $bucket['area_ha'], 2);
+            $bucket['feed_kg'] = round((float) $bucket['feed_kg'], 1);
+            $bucket['extruder_kg'] = round((float) $bucket['extruder_kg'], 1);
+            $bucket['granula_kg'] = round((float) $bucket['granula_kg'], 1);
+            $bucket['fish_stocked'] = (int) $bucket['fish_stocked'];
+        }
+        unset($bucket);
 
         ksort($yearBuckets);
         $resultsByYear = array_values($yearBuckets);
@@ -900,6 +932,7 @@ class OwnerCabinetController extends Controller
                 'granula_kg' => round($feedTypeKg['granula'], 1),
                 'biomass_gain_kg' => round(array_sum($gainValues), 1),
                 'area_ha' => round(array_sum($areaValues), 2),
+                'fish_stocked' => $fishStockedTotal,
                 'regions_count' => $clientsByRegion->count(),
             ],
         ];
@@ -916,6 +949,8 @@ class OwnerCabinetController extends Controller
                 'ponds_open' => $openCount,
                 'ponds_final' => $finalCount,
                 'ponds_total' => $openCount + $finalCount,
+                'area_ha' => round(array_sum($areaValues), 2),
+                'fish_stocked' => $fishStockedTotal,
             ],
             'analytics' => $analytics,
             'staff' => $staff,
