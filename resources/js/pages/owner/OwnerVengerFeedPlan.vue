@@ -154,9 +154,15 @@
               <label>{{ $t('phone2Optional') }}</label>
               <PhoneInput v-model="draft.phone2" />
             </div>
-            <div class="field">
-              <label>{{ $t('vengerFeedPlanColLocation') }}</label>
-              <input v-model="draft.location_text" maxlength="500" :placeholder="$t('vengerFeedPlanLocationPh')" />
+            <div class="form-wide">
+              <RegionDistrictPicker
+                :region="draft.region"
+                :district="draft.district"
+                :region-label="$t('region')"
+                :district-label="$t('district')"
+                @update:region="draft.region = $event"
+                @update:district="draft.district = $event"
+              />
             </div>
             <div class="field">
               <label>{{ $t('vengerFeedPlanColArea') }}</label>
@@ -206,7 +212,8 @@
                   <th>{{ $t('vengerFeedPlanColName') }}</th>
                   <th>{{ $t('phone') }}</th>
                   <th>{{ $t('phone2Optional') }}</th>
-                  <th>{{ $t('vengerFeedPlanColLocation') }}</th>
+                  <th>{{ $t('region') }}</th>
+                  <th>{{ $t('district') }}</th>
                   <th class="num">{{ $t('vengerFeedPlanColArea') }}</th>
                   <th class="num">{{ $t('vengerFeedPlanColLastFeed') }}</th>
                   <th class="num">{{ $t('vengerFeedPlanColRating') }}</th>
@@ -237,11 +244,29 @@
                     />
                   </td>
                   <td>
-                    <input
+                    <select
                       class="vfp-cell"
-                      :value="row.location_text || ''"
-                      @change="patchRow(row, { location_text: $event.target.value })"
-                    />
+                      :value="row.region || ''"
+                      @change="patchLocation(row, $event.target.value, '')"
+                    >
+                      <option value="">{{ $t('selectRegion') }}</option>
+                      <option v-for="name in regionOptions" :key="name" :value="name">{{ name }}</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      class="vfp-cell"
+                      :value="row.district || ''"
+                      :disabled="!row.region"
+                      @change="patchLocation(row, row.region, $event.target.value)"
+                    >
+                      <option value="">{{ $t('selectDistrict') }}</option>
+                      <option
+                        v-for="name in districtsFor(row.region)"
+                        :key="`${row.id}-${name}`"
+                        :value="name"
+                      >{{ name }}</option>
+                    </select>
                   </td>
                   <td class="num">
                     <input
@@ -325,8 +350,10 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import OwnerVengerNav from '../../components/OwnerVengerNav.vue';
 import PhoneInput from '../../components/PhoneInput.vue';
 import FormattedNumberInput from '../../components/FormattedNumberInput.vue';
+import RegionDistrictPicker from '../../components/RegionDistrictPicker.vue';
 import auth from '../../auth';
 import { showSaved } from '../../flash';
+import { districtsForRegion, regionNames } from '../../data/uzbekistanDistricts';
 import { formatPhoneDisplay, isCompletePhone } from '../../utils/phone';
 import { formatNumber } from '../../utils/number';
 import {
@@ -343,7 +370,8 @@ function emptyDraft() {
     client_name: '',
     phone: '+998',
     phone2: '+998',
-    location_text: '',
+    region: '',
+    district: '',
     pond_area_ha: '',
     last_year_feed_kg: '',
     rating_10: '',
@@ -355,8 +383,12 @@ function emptyDraft() {
   };
 }
 
+function locationText(region, district) {
+  return [region, district].filter(Boolean).join(', ') || null;
+}
+
 export default {
-  components: { OwnerVengerNav, PhoneInput, FormattedNumberInput },
+  components: { OwnerVengerNav, PhoneInput, FormattedNumberInput, RegionDistrictPicker },
   setup() {
     const apiBase = computed(() => (auth.isOwner() ? '/owner/venger' : '/venger'));
     const loading = ref(true);
@@ -372,6 +404,11 @@ export default {
     const rowError = ref('');
     const draft = reactive(emptyDraft());
     const pickClientId = ref('');
+    const regionOptions = regionNames();
+
+    function districtsFor(region) {
+      return districtsForRegion(region || '');
+    }
 
     function formatPhone(phone) {
       return formatPhoneDisplay(phone || '');
@@ -452,7 +489,8 @@ export default {
       draft.client_name = c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim();
       draft.phone = c.phone || '+998';
       draft.phone2 = c.phone2 || '+998';
-      draft.location_text = [c.region, c.district].filter(Boolean).join(', ') || c.address || '';
+      draft.region = c.region || '';
+      draft.district = c.district || '';
     }
 
     function resetDraft() {
@@ -475,13 +513,23 @@ export default {
         rowError.value = t('phoneIncompleteFull');
         return;
       }
+      if (!draft.region) {
+        rowError.value = t('selectRegionFirst');
+        return;
+      }
+      if (!draft.district) {
+        rowError.value = t('districtRequired');
+        return;
+      }
       savingRow.value = true;
       try {
         const payload = {
           client_name: draft.client_name.trim(),
           phone: draft.phone,
           phone2,
-          location_text: draft.location_text || null,
+          region: draft.region,
+          district: draft.district,
+          location_text: locationText(draft.region, draft.district),
           pond_area_ha: numOrNull(draft.pond_area_ha),
           last_year_feed_kg: numOrNull(draft.last_year_feed_kg),
           rating_10: intOrNull(draft.rating_10),
@@ -517,6 +565,14 @@ export default {
         window.alert(errors ? Object.values(errors).flat().join(' ') : (e.response?.data?.message || t('noData')));
         await selectPlan(plan.value.id);
       }
+    }
+
+    async function patchLocation(row, region, district) {
+      await patchRow(row, {
+        region: region || null,
+        district: district || null,
+        location_text: locationText(region, district),
+      });
     }
 
     async function patchPhone2(row, raw) {
@@ -609,7 +665,7 @@ export default {
             excelCell(idx + 1, 'text'),
             excelCell(row.client_name || '', 'text'),
             excelCell(formatPhone(row.phone), 'text'),
-            excelCell(row.location_text || '', 'text'),
+            excelCell(row.location_text || locationText(row.region, row.district) || '', 'text'),
             excelCell(row.pond_area_ha == null ? '' : excelMoney(row.pond_area_ha), 'money'),
             excelCell(row.last_year_feed_kg == null ? '' : excelMoney(row.last_year_feed_kg), 'money'),
             excelCell(row.rating_10 == null ? '' : Number(row.rating_10), 'text'),
@@ -654,6 +710,8 @@ export default {
       rowError,
       draft,
       pickClientId,
+      regionOptions,
+      districtsFor,
       formatPhone,
       fmtNum,
       numOrNull,
@@ -663,6 +721,7 @@ export default {
       applyPickedClient,
       addRow,
       patchRow,
+      patchLocation,
       patchPhone2,
       growthLabel,
       growthClass,
