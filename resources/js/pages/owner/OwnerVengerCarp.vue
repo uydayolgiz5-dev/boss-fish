@@ -51,71 +51,118 @@
 
         <div v-if="!yearRows.length" class="empty">{{ $t('ownerVengerNoChartData') }}</div>
 
-        <div v-else class="ov-flow">
-          <article v-for="(row, idx) in yearRows" :key="row.year" class="ov-year">
-            <div class="ov-year__badge">{{ row.year }}</div>
+        <div v-else class="ov-timeline">
+          <article v-for="(row, idx) in yearRows" :key="row.year" class="ov-year-block">
+            <div class="ov-scheme" :style="{ '--i': idx }">
+              <!-- Start: circular year -->
+              <div class="ov-node ov-node--start">
+                <strong>{{ row.year }}</strong>
+                <span>{{ $t('vengerFeedPlanCompareYear') }}</span>
+              </div>
 
-            <div class="ov-algo">
-              <div class="ov-algo__step">
+              <div class="ov-link" aria-hidden="true">
+                <span class="ov-link__line" />
+                <span class="ov-link__tip" />
+              </div>
+
+              <!-- Capsule steps -->
+              <div class="ov-node ov-node--pill">
                 <span>{{ $t('vengerFeedPlanCompareClients') }}</span>
                 <strong>{{ number(row.clients_count) }}</strong>
               </div>
-              <div class="ov-algo__arrow" aria-hidden="true">→</div>
-              <div class="ov-algo__step">
-                <span>{{ $t('ownerVengerTotalArea') }}</span>
-                <strong>{{ fmt(row.area_ha, 2) }} <small>ha</small></strong>
-              </div>
-              <div class="ov-algo__arrow" aria-hidden="true">→</div>
-              <div class="ov-algo__step ov-algo__step--focus">
-                <span>{{ $t('ownerVengerFishStocked') }}</span>
-                <strong>{{ number(row.fish_stocked) }} <small>{{ $t('pieces') }}</small></strong>
-              </div>
-            </div>
 
-            <div class="ov-algo ov-algo--feed">
-              <div class="ov-algo__step ov-algo__step--plan">
-                <span>{{ $t('vengerFeedExtruder') }}</span>
-                <strong>{{ fmtTon(row.plan_extruder_kg) }}</strong>
+              <div class="ov-link" aria-hidden="true">
+                <span class="ov-link__line" />
+                <span class="ov-link__tip" />
               </div>
-              <div class="ov-algo__plus" aria-hidden="true">+</div>
-              <div class="ov-algo__step ov-algo__step--plan">
-                <span>{{ $t('vengerFeedGranula') }}</span>
-                <strong>{{ fmtTon(row.plan_granula_kg) }}</strong>
+
+              <div class="ov-node ov-node--pill">
+                <span>{{ $t('ownerVengerTotalArea') }}</span>
+                <strong>{{ fmt(row.area_ha, 2) }} <em>ha</em></strong>
               </div>
-              <div class="ov-algo__arrow" aria-hidden="true">=</div>
-              <div class="ov-algo__step ov-algo__step--plan-total">
+
+              <div class="ov-link" aria-hidden="true">
+                <span class="ov-link__line" />
+                <span class="ov-link__tip" />
+              </div>
+
+              <div class="ov-node ov-node--pill ov-node--focus">
+                <span>{{ $t('ownerVengerFishStocked') }}</span>
+                <strong>{{ number(row.fish_stocked) }} <em>{{ $t('pieces') }}</em></strong>
+              </div>
+
+              <div class="ov-link" aria-hidden="true">
+                <span class="ov-link__line" />
+                <span class="ov-link__tip" />
+              </div>
+
+              <!-- Fork: plan feed composition -->
+              <div class="ov-fork">
+                <div class="ov-fork__rail" aria-hidden="true" />
+                <div class="ov-fork__branches">
+                  <div class="ov-node ov-node--pill ov-node--plan">
+                    <span>{{ $t('vengerFeedExtruder') }}</span>
+                    <strong>{{ fmtTon(row.plan_extruder_kg) }}</strong>
+                  </div>
+                  <div class="ov-node ov-node--pill ov-node--plan">
+                    <span>{{ $t('vengerFeedGranula') }}</span>
+                    <strong>{{ fmtTon(row.plan_granula_kg) }}</strong>
+                  </div>
+                </div>
+                <div class="ov-fork__join" aria-hidden="true">
+                  <span class="ov-fork__join-line" />
+                  <span class="ov-link__tip" />
+                </div>
+              </div>
+
+              <div class="ov-node ov-node--pill ov-node--plan-end">
                 <span>{{ $t('ownerVengerPlanFeed') }}</span>
                 <strong>{{ fmtTon(row.plan_feed_kg) }}</strong>
               </div>
             </div>
 
-            <div class="ov-result-line">
-              <div class="ov-result-line__label">
-                <span>{{ $t('ownerVengerResultFeed') }}</span>
-                <em>{{ $t('ownerVengerResultFeedHint') }}</em>
+            <!-- Separate result branch (not mixed) -->
+            <div class="ov-side">
+              <div class="ov-side__cap">{{ $t('ownerVengerResultFeed') }}</div>
+              <p class="ov-side__hint">{{ $t('ownerVengerResultFeedHint') }}</p>
+              <div class="ov-side__nodes">
+                <div class="ov-node ov-node--oval ov-node--result">
+                  <span>{{ $t('vengerFeedExtruder') }}</span>
+                  <strong>{{ fmtTon(row.result_extruder_kg) }}</strong>
+                </div>
+                <div class="ov-side__plus" aria-hidden="true">+</div>
+                <div class="ov-node ov-node--oval ov-node--result">
+                  <span>{{ $t('vengerFeedGranula') }}</span>
+                  <strong>{{ fmtTon(row.result_granula_kg) }}</strong>
+                </div>
+                <div class="ov-side__eq" aria-hidden="true">=</div>
+                <div class="ov-node ov-node--oval ov-node--result-end">
+                  <span>{{ $t('total') }}</span>
+                  <strong>{{ fmtTon(row.result_feed_kg) }}</strong>
+                </div>
               </div>
-              <div class="ov-result-line__vals">
-                <span>{{ $t('vengerFeedExtruder') }}: {{ fmtTon(row.result_extruder_kg) }}</span>
-                <span>{{ $t('vengerFeedGranula') }}: {{ fmtTon(row.result_granula_kg) }}</span>
-                <strong>{{ fmtTon(row.result_feed_kg) }}</strong>
-              </div>
-              <div class="ov-compare">
-                <div class="ov-compare__track">
-                  <div
-                    class="ov-compare__plan"
-                    :style="{ width: barPct(row.plan_feed_kg, row) + '%' }"
-                    :title="$t('ownerVengerPlanFeed')"
-                  />
-                  <div
-                    class="ov-compare__result"
-                    :style="{ width: barPct(row.result_feed_kg, row) + '%' }"
-                    :title="$t('ownerVengerResultFeed')"
-                  />
+              <div class="ov-bars">
+                <div class="ov-bars__row">
+                  <span>{{ $t('ownerVengerPlanFeed') }}</span>
+                  <div class="ov-bars__track">
+                    <i class="ov-bars__fill ov-bars__fill--plan" :style="{ width: barPct(row.plan_feed_kg, row) + '%' }" />
+                  </div>
+                  <b>{{ fmtTon(row.plan_feed_kg) }}</b>
+                </div>
+                <div class="ov-bars__row">
+                  <span>{{ $t('ownerVengerResultFeed') }}</span>
+                  <div class="ov-bars__track">
+                    <i class="ov-bars__fill ov-bars__fill--result" :style="{ width: barPct(row.result_feed_kg, row) + '%' }" />
+                  </div>
+                  <b>{{ fmtTon(row.result_feed_kg) }}</b>
                 </div>
               </div>
             </div>
 
-            <div v-if="idx < yearRows.length - 1" class="ov-flow__next" aria-hidden="true">↓</div>
+            <div v-if="idx < yearRows.length - 1" class="ov-year-next" aria-hidden="true">
+              <span class="ov-year-next__line" />
+              <span class="ov-year-next__tip" />
+            </div>
           </article>
         </div>
       </section>
@@ -267,142 +314,253 @@ export default {
 }
 .ov-flow-panel__head { margin-bottom: 1rem; }
 
-.ov-flow { display: grid; gap: 0.35rem; }
-.ov-year {
-  position: relative;
-  padding: 1rem 1.05rem 1.1rem;
-  border: 1.5px solid rgba(15, 23, 42, 0.14);
-  border-radius: 16px;
-  background: linear-gradient(180deg, #fbfcfb 0%, #f4f7f5 100%);
+.ov-timeline { display: grid; gap: 1.25rem; }
+.ov-year-block {
+  padding: 1.15rem 1.1rem 1.2rem;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background:
+    radial-gradient(1200px 280px at 0% 0%, rgba(13, 107, 63, 0.07), transparent 55%),
+    linear-gradient(180deg, #fcfdfc 0%, #f3f6f4 100%);
+  animation: ov-in 0.45s ease both;
+  animation-delay: calc(var(--i, 0) * 0.05s);
 }
-.ov-year__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 4.2rem;
-  margin-bottom: 0.85rem;
-  padding: 0.3rem 0.7rem;
-  border-radius: 999px;
-  background: #0d6b3f;
-  color: #fff;
-  font-weight: 750;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+@keyframes ov-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
 
-.ov-algo {
+/* ===== Algorithm scheme ===== */
+.ov-scheme {
+  --line: #94a3b8;
   display: flex;
   flex-wrap: wrap;
-  align-items: stretch;
-  gap: 0.45rem;
-  margin-bottom: 0.75rem;
+  align-items: center;
+  gap: 0.15rem 0.2rem;
+  margin-bottom: 1rem;
 }
-.ov-algo--feed { margin-bottom: 0.85rem; }
-.ov-algo__step {
-  flex: 1 1 7.5rem;
-  min-width: 7rem;
-  padding: 0.7rem 0.8rem;
-  border-radius: 12px;
-  background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+
+.ov-node {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.15rem;
+  padding: 0.55rem 1rem;
+  background: #fff;
+  border: 1.5px solid rgba(15, 23, 42, 0.14);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
 }
-.ov-algo__step span {
-  font-size: 0.72rem;
-  color: #5b6b60;
-  font-weight: 650;
+.ov-node span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-.ov-algo__step strong {
-  font-size: 1.12rem;
-  font-variant-numeric: tabular-nums;
+  color: #64748b;
   line-height: 1.2;
 }
-.ov-algo__step small {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #667085;
-}
-.ov-algo__step--focus {
-  border-color: rgba(13, 107, 63, 0.35);
-  box-shadow: inset 0 0 0 1px rgba(13, 107, 63, 0.08);
-}
-.ov-algo__step--plan { background: #f3faf6; border-color: rgba(13, 107, 63, 0.2); }
-.ov-algo__step--plan-total {
-  background: #0d6b3f;
-  border-color: #0d6b3f;
-  color: #fff;
-}
-.ov-algo__step--plan-total span { color: rgba(255, 255, 255, 0.78); }
-.ov-algo__step--plan-total strong { color: #fff; }
-.ov-algo__arrow,
-.ov-algo__plus {
-  align-self: center;
-  color: #667085;
-  font-weight: 700;
+.ov-node strong {
   font-size: 1.05rem;
-  padding: 0 0.1rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  color: #0f172a;
+}
+.ov-node em {
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: #64748b;
 }
 
-.ov-result-line {
-  padding: 0.75rem 0.85rem;
-  border-radius: 12px;
-  border: 1px dashed rgba(180, 83, 9, 0.4);
+/* Dumaloq — yil (start) */
+.ov-node--start {
+  width: 5.4rem;
+  height: 5.4rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #1a8f55, #0d6b3f 70%);
+  border-color: #0a5a34;
+  color: #fff;
+  flex-shrink: 0;
+}
+.ov-node--start span { color: rgba(255, 255, 255, 0.75); font-size: 0.62rem; }
+.ov-node--start strong { color: #fff; font-size: 1.25rem; }
+
+/* Uzunchoq kapsulalar — jarayon */
+.ov-node--pill {
+  min-width: 7.2rem;
+  min-height: 3.6rem;
+  border-radius: 999px;
+  padding: 0.55rem 1.15rem;
+}
+.ov-node--focus {
+  border-color: rgba(13, 107, 63, 0.45);
+  background: #f0faf4;
+}
+.ov-node--plan {
+  border-color: rgba(13, 107, 63, 0.3);
+  background: #f3faf6;
+}
+.ov-node--plan-end {
+  min-width: 8.2rem;
+  border-radius: 999px;
+  background: #0d6b3f;
+  border-color: #0a5a34;
+}
+.ov-node--plan-end span { color: rgba(255, 255, 255, 0.78); }
+.ov-node--plan-end strong { color: #fff; }
+
+/* Dumaloq oval — natija tarmog‘i */
+.ov-node--oval {
+  min-width: 6.5rem;
+  min-height: 3.4rem;
+  border-radius: 50% / 45%;
+  padding: 0.5rem 1rem;
+}
+.ov-node--result {
+  border-color: rgba(217, 119, 6, 0.4);
   background: #fffaf3;
 }
-.ov-result-line__label {
+.ov-node--result span { color: #b45309; }
+.ov-node--result-end {
+  border-color: #b45309;
+  background: linear-gradient(180deg, #f59e0b, #d97706);
+}
+.ov-node--result-end span { color: rgba(255, 255, 255, 0.85); }
+.ov-node--result-end strong { color: #fff; }
+
+/* Connectors */
+.ov-link {
+  display: flex;
+  align-items: center;
+  width: 1.6rem;
+  flex-shrink: 0;
+  position: relative;
+}
+.ov-link__line {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--line);
+  border-radius: 2px;
+}
+.ov-link__tip {
+  position: absolute;
+  right: -1px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid var(--line);
+}
+
+.ov-fork {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0.15rem;
+}
+.ov-fork__branches {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.45rem 0.75rem;
-  margin-bottom: 0.45rem;
+  justify-content: center;
+  gap: 0.45rem;
 }
-.ov-result-line__label span {
-  font-weight: 750;
+.ov-fork__join {
+  position: relative;
+  width: 1.6rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+}
+.ov-fork__join-line {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--line);
+}
+.ov-fork__join .ov-link__tip {
+  right: -1px;
+}
+
+/* Natija — alohida tarmoq */
+.ov-side {
+  margin-top: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  border: 1.5px dashed rgba(217, 119, 6, 0.45);
+  background: rgba(255, 250, 243, 0.7);
+}
+.ov-side__cap {
+  font-weight: 780;
   color: #9a3412;
+  margin-bottom: 0.2rem;
 }
-.ov-result-line__label em {
-  font-style: normal;
+.ov-side__hint {
+  margin: 0 0 0.7rem;
   font-size: 0.78rem;
   color: #9a6a3a;
 }
-.ov-result-line__vals {
+.ov-side__nodes {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem 1rem;
-  align-items: baseline;
-  font-variant-numeric: tabular-nums;
-  font-size: 0.9rem;
-  color: #5b4632;
-  margin-bottom: 0.55rem;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  margin-bottom: 0.85rem;
 }
-.ov-result-line__vals strong {
-  margin-left: auto;
+.ov-side__plus,
+.ov-side__eq {
+  font-weight: 800;
+  color: #b45309;
   font-size: 1.05rem;
-  color: #9a3412;
 }
-.ov-compare__track {
-  display: grid;
-  gap: 0.28rem;
-}
-.ov-compare__plan,
-.ov-compare__result {
-  height: 8px;
-  border-radius: 999px;
-  max-width: 100%;
-}
-.ov-compare__plan { background: #0d6b3f; }
-.ov-compare__result { background: #d97706; }
 
-.ov-flow__next {
-  text-align: center;
-  color: #94a3b8;
-  font-size: 1.2rem;
-  line-height: 1;
-  margin: 0.15rem 0;
+.ov-bars { display: grid; gap: 0.4rem; }
+.ov-bars__row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) 1fr auto;
+  gap: 0.55rem;
+  align-items: center;
+  font-size: 0.8rem;
+}
+.ov-bars__row span { color: #5b4632; font-weight: 650; }
+.ov-bars__row b { font-variant-numeric: tabular-nums; min-width: 4.2rem; text-align: right; }
+.ov-bars__track {
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+.ov-bars__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+.ov-bars__fill--plan { background: #0d6b3f; }
+.ov-bars__fill--result { background: #d97706; }
+
+.ov-year-next {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0.85rem auto 0;
+  height: 1.6rem;
+  width: 2px;
+  position: relative;
+}
+.ov-year-next__line {
+  flex: 1;
+  width: 2px;
+  background: #94a3b8;
+  border-radius: 2px;
+}
+.ov-year-next__tip {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #94a3b8;
 }
 
 .ov-hbar-list { display: grid; gap: 0.65rem; }
@@ -428,10 +586,68 @@ export default {
 @media (max-width: 1100px) {
   .ov-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+@media (max-width: 900px) {
+  .ov-scheme {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ov-link {
+    width: auto;
+    height: 1.35rem;
+    justify-content: center;
+    align-self: center;
+  }
+  .ov-link__line {
+    width: 2px;
+    height: 100%;
+  }
+  .ov-link__tip {
+    right: auto;
+    bottom: -1px;
+    top: auto;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid var(--line);
+    border-bottom: 0;
+  }
+  .ov-node--pill,
+  .ov-node--plan-end,
+  .ov-node--start {
+    width: 100%;
+    max-width: 22rem;
+    align-self: center;
+  }
+  .ov-node--start {
+    width: 5.4rem;
+    height: 5.4rem;
+  }
+  .ov-fork { width: 100%; }
+  .ov-fork__join {
+    width: auto;
+    height: 1.35rem;
+  }
+  .ov-fork__join-line {
+    width: 2px;
+    height: 100%;
+    margin: 0 auto;
+  }
+  .ov-fork__join .ov-link__tip {
+    left: 50%;
+    right: auto;
+    bottom: -1px;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid var(--line);
+  }
+  .ov-bars__row {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+  .ov-bars__row b { text-align: left; }
+}
 @media (max-width: 720px) {
   .ov-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ov-algo__arrow { display: none; }
-  .ov-result-line__vals strong { margin-left: 0; }
 }
 @media (max-width: 480px) {
   .ov-kpis { grid-template-columns: 1fr; }

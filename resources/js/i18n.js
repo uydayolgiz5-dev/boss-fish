@@ -224,7 +224,7 @@ const messages = {
         ownerVengerResultsBrowseHint: 'Barcha natijalar shu yerda: mijoz qidirmasdan jarayon va yakunlanganlarni ko‘ring.',
         ownerVengerFishStocked: 'Yemda boqiladigan baliq',
         ownerVengerYearlyTitle: 'Yillar kesimi',
-        ownerVengerYearlyHint: 'Har yil: mijoz → maydon → baliq → yem reja. Natija yemi alohida qator.',
+        ownerVengerYearlyHint: 'Algoritm: yil → mijoz → maydon → baliq → yem reja. Natija yemi alohida tarmoq.',
         ownerVengerPlanFeed: 'Yillik yem reja',
         ownerVengerResultFeed: 'Natija qayt etilgan yem',
         ownerVengerResultFeedHint: 'Natija yozilganda kiritilgan yem — reja bilan qo‘shilmaydi',
