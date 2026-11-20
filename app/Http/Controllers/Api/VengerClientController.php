@@ -577,10 +577,47 @@ class VengerClientController extends Controller
         ];
 
         if ($withResults) {
-            $client->loadMissing(['results.fish']);
-            $payload['results'] = $client->results->map(function (VengerResult $r) {
+            $client->loadMissing(['results.fish', 'feedPlanRows.plan']);
+
+            $planByYear = [];
+            foreach ($client->feedPlanRows as $row) {
+                $year = (int) ($row->plan?->year ?? 0);
+                if ($year <= 0) {
+                    continue;
+                }
+                $extruder = (float) ($row->next_year_extruder_kg ?? 0);
+                $granula = (float) ($row->next_year_granule_kg ?? 0);
+                $planByYear[$year] = [
+                    'year' => $year,
+                    'pond_area_ha' => $row->pond_area_ha !== null ? round((float) $row->pond_area_ha, 3) : null,
+                    'fish_stocked' => (int) ($row->next_year_carp_count ?? 0),
+                    'plan_extruder_kg' => round($extruder, 1),
+                    'plan_granula_kg' => round($granula, 1),
+                    'plan_feed_kg' => round($extruder + $granula, 1),
+                ];
+            }
+
+            $results = $client->results->map(function (VengerResult $r) use ($planByYear) {
                 $stockedOn = optional($r->stocked_on)?->toDateString();
                 $soldOn = optional($r->sold_on)?->toDateString();
+                $season = $this->seasonLabel($stockedOn, $soldOn);
+                $startYear = $stockedOn ? (int) date('Y', strtotime($stockedOn)) : null;
+                $plan = null;
+                if ($startYear) {
+                    $plan = $planByYear[$startYear + 1] ?? $planByYear[$startYear] ?? null;
+                }
+
+                $metrics = $r->metrics();
+                $feeds = collect($r->feeds ?? []);
+                $extruderKg = (float) $feeds
+                    ->filter(fn ($f) => \App\Support\VengerFeedTypes::normalize($f['type'] ?? null) === \App\Support\VengerFeedTypes::EXTRUDER)
+                    ->sum(fn ($f) => (float) ($f['kg'] ?? 0));
+                $granulaKg = (float) $feeds
+                    ->filter(fn ($f) => \App\Support\VengerFeedTypes::normalize($f['type'] ?? null) === \App\Support\VengerFeedTypes::GRANULA)
+                    ->sum(fn ($f) => (float) ($f['kg'] ?? 0));
+                $resultFeedKg = ($extruderKg + $granulaKg) > 0
+                    ? round($extruderKg + $granulaKg, 1)
+                    : round((float) ($r->feed_kg ?? 0), 1);
 
                 return [
                     'id' => $r->id,
@@ -592,16 +629,42 @@ class VengerClientController extends Controller
                     'address' => $r->address,
                     'stocked_on' => $stockedOn,
                     'sold_on' => $soldOn,
-                    'season' => $this->seasonLabel($stockedOn, $soldOn),
+                    'season' => $season,
                     'stocked_pieces' => $r->stocked_pieces,
                     'sold_pieces' => $r->sold_pieces,
-                    'feed_kg' => $r->feed_kg,
+                    'feed_kg' => $resultFeedKg,
+                    'result_extruder_kg' => round($extruderKg, 1),
+                    'result_granula_kg' => round($granulaKg, 1),
+                    'result_feed_kg' => $resultFeedKg,
+                    'plan' => $plan,
                     'feeds' => $r->feeds ?? [],
                     'sold_weight_kg' => $r->sold_weight_kg,
                     'fish_types' => $r->fish->pluck('fish_type')->values(),
-                    'metrics' => $r->metrics(),
+                    'metrics' => $metrics,
                 ];
             })->values();
+
+            $payload['results'] = $results;
+            $payload['feed_plans'] = array_values($planByYear);
+
+            $fcrValues = $results
+                ->map(fn ($r) => $r['metrics']['fcr'] ?? null)
+                ->filter(fn ($v) => $v !== null)
+                ->values();
+            $payload['summary'] = [
+                'results_count' => $results->count(),
+                'pond_area_ha' => $client->pond_area_ha !== null ? round((float) $client->pond_area_ha, 3) : null,
+                'result_feed_kg' => round((float) $results->sum('result_feed_kg'), 1),
+                'plan_feed_kg' => round((float) collect($planByYear)->sum('plan_feed_kg'), 1),
+                'avg_fcr' => $fcrValues->isEmpty()
+                    ? null
+                    : round((float) $fcrValues->avg(), 2),
+                'weight_gain_kg' => round((float) $results->sum(function ($r) {
+                    return (float) ($r['metrics']['sazan']['biomass_gain_kg']
+                        ?? $r['metrics']['weight_gain_kg']
+                        ?? 0);
+                }), 1),
+            ];
         }
 
         return $payload;
