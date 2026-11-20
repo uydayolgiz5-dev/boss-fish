@@ -9,7 +9,7 @@
         <span class="owner-planner-legend__hint">{{ $t('ownerPlannerLegendHint') }}</span>
       </div>
 
-      <section class="owner-planner-inbox">
+      <section class="owner-planner-inbox owner-planner-inbox--card">
         <header class="owner-planner-inbox__head">
           <div>
             <h2>{{ $t('ownerPlannerInboxTitle') }}</h2>
@@ -33,7 +33,7 @@
               class="owner-planner-done"
               :aria-label="$t('ownerPlannerMarkDone')"
               :title="$t('ownerPlannerMarkDone')"
-              @click="completeInbox(task)"
+              @click="askCompleteInbox(task)"
             >
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
             </button>
@@ -45,6 +45,30 @@
           </li>
         </ul>
       </section>
+
+      <Teleport to="body">
+        <div
+          v-if="pendingDone"
+          class="owner-planner-confirm"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="$t('ownerPlannerConfirmDoneTitle')"
+          @click.self="cancelComplete"
+        >
+          <div class="owner-planner-confirm__card">
+            <h3>{{ $t('ownerPlannerConfirmDoneTitle') }}</h3>
+            <p>{{ $t('ownerPlannerConfirmDoneText', { text: pendingDone.text }) }}</p>
+            <div class="owner-planner-confirm__actions">
+              <button class="btn btn-outline" type="button" :disabled="completing" @click="cancelComplete">
+                {{ $t('ownerPlannerConfirmDoneNo') }}
+              </button>
+              <button class="btn btn-primary" type="button" :disabled="completing" @click="confirmCompleteInbox">
+                {{ completing ? $t('saving') : $t('ownerPlannerConfirmDoneYes') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
 
       <div class="owner-planner-board owner-planner-board--daily">
         <article
@@ -371,10 +395,30 @@ export default {
       }
     }
 
-    async function completeInbox(task) {
-      const { data } = await window.axios.post(`/owner/planner/inbox/${task.id}/complete`);
-      inbox.value = inbox.value.filter((item) => item.id !== task.id);
-      completed.value = [data, ...completed.value].slice(0, 80);
+    const pendingDone = ref(null);
+    const completing = ref(false);
+
+    function askCompleteInbox(task) {
+      pendingDone.value = task;
+    }
+
+    function cancelComplete() {
+      if (completing.value) return;
+      pendingDone.value = null;
+    }
+
+    async function confirmCompleteInbox() {
+      const task = pendingDone.value;
+      if (!task) return;
+      completing.value = true;
+      try {
+        const { data } = await window.axios.post(`/owner/planner/inbox/${task.id}/complete`);
+        inbox.value = inbox.value.filter((item) => item.id !== task.id);
+        completed.value = [data, ...completed.value].slice(0, 80);
+        pendingDone.value = null;
+      } finally {
+        completing.value = false;
+      }
     }
 
     async function removeInbox(task) {
@@ -391,7 +435,13 @@ export default {
     }
 
     function onKeydown(event) {
-      if (event.key === 'Escape') addMenuKey.value = '';
+      if (event.key === 'Escape') {
+        if (pendingDone.value) {
+          cancelComplete();
+          return;
+        }
+        addMenuKey.value = '';
+      }
     }
 
     onMounted(() => {
@@ -428,7 +478,11 @@ export default {
       addCell,
       removeCell,
       addInbox,
-      completeInbox,
+      pendingDone,
+      completing,
+      askCompleteInbox,
+      cancelComplete,
+      confirmCompleteInbox,
       removeInbox,
     };
   },

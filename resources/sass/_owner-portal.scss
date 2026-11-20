@@ -1738,6 +1738,57 @@ $planner-line-height: 2rem;
   }
 }
 
+.owner-planner-inbox--card {
+  background: #fff !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  border-radius: 16px !important;
+  padding: 1rem 1.05rem 1.05rem !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06) !important;
+}
+
+.owner-planner-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.owner-planner-confirm__card {
+  width: min(100%, 22rem);
+  padding: 1.15rem 1.2rem 1.2rem;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+
+  h3 {
+    margin: 0 0 0.45rem;
+    font-size: 1.05rem;
+    color: #0f172a;
+  }
+
+  p {
+    margin: 0 0 1rem;
+    color: #475569;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+}
+
+.owner-planner-confirm__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+
+  .btn {
+    min-width: 5.5rem;
+  }
+}
+
 .owner-planner-inbox-done {
   margin-top: 1rem;
   padding-top: 0.75rem;

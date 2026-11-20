@@ -3,7 +3,7 @@
     <div v-if="loading" class="empty">{{ $t('loading') }}</div>
 
     <template v-else>
-      <section class="owner-planner-long-term">
+      <section class="owner-planner-long-term owner-planner-inbox--card">
         <header class="owner-planner-long-term__head">
           <div>
             <h2>{{ $t('ownerPlannerLongTermTitle') }}</h2>
@@ -27,7 +27,7 @@
               class="owner-planner-done"
               :aria-label="$t('ownerPlannerMarkDone')"
               :title="$t('ownerPlannerMarkDone')"
-              @click="completeLongTerm(task)"
+              @click="askCompleteLongTerm(task)"
             >
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
             </button>
@@ -48,6 +48,30 @@
           </ul>
         </div>
       </section>
+
+      <Teleport to="body">
+        <div
+          v-if="pendingDone"
+          class="owner-planner-confirm"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="$t('ownerPlannerConfirmDoneTitle')"
+          @click.self="cancelComplete"
+        >
+          <div class="owner-planner-confirm__card">
+            <h3>{{ $t('ownerPlannerConfirmDoneTitle') }}</h3>
+            <p>{{ $t('ownerPlannerConfirmDoneText', { text: pendingDone.text }) }}</p>
+            <div class="owner-planner-confirm__actions">
+              <button class="btn btn-outline" type="button" :disabled="completing" @click="cancelComplete">
+                {{ $t('ownerPlannerConfirmDoneNo') }}
+              </button>
+              <button class="btn btn-primary" type="button" :disabled="completing" @click="confirmCompleteLongTerm">
+                {{ completing ? $t('saving') : $t('ownerPlannerConfirmDoneYes') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
 
       <div class="owner-planner-yearly-layout">
         <div class="owner-planner-cal-box">
@@ -326,13 +350,33 @@ export default {
       await saveLongTerm();
     }
 
-    async function completeLongTerm(task) {
-      longTerm.value = longTerm.value.map((item) => (
-        item.id === task.id
-          ? { ...item, completed_at: new Date().toISOString() }
-          : item
-      ));
-      await saveLongTerm();
+    const pendingDone = ref(null);
+    const completing = ref(false);
+
+    function askCompleteLongTerm(task) {
+      pendingDone.value = task;
+    }
+
+    function cancelComplete() {
+      if (completing.value) return;
+      pendingDone.value = null;
+    }
+
+    async function confirmCompleteLongTerm() {
+      const task = pendingDone.value;
+      if (!task) return;
+      completing.value = true;
+      try {
+        longTerm.value = longTerm.value.map((item) => (
+          item.id === task.id
+            ? { ...item, completed_at: new Date().toISOString() }
+            : item
+        ));
+        await saveLongTerm();
+        pendingDone.value = null;
+      } finally {
+        completing.value = false;
+      }
     }
 
     async function removeLongTerm(task) {
@@ -418,7 +462,11 @@ export default {
       removeCell,
       saveNow,
       addLongTerm,
-      completeLongTerm,
+      pendingDone,
+      completing,
+      askCompleteLongTerm,
+      cancelComplete,
+      confirmCompleteLongTerm,
       removeLongTerm,
     };
   },
