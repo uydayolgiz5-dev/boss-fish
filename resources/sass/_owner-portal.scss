@@ -944,8 +944,8 @@ $planner-line-height: 2rem;
 
   .owner-planner-sheet {
     min-width: 138px;
-    background: #fffef8;
-    border: 1px solid rgba(17, 17, 17, 0.14);
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
     box-shadow: none;
     color: #1a1a1a;
     display: flex;
@@ -1373,19 +1373,19 @@ $planner-line-height: 2rem;
 .owner-planner-day-editor,
 .owner-planner-daily-card,
 .owner-planner-inbox {
-  background: #fffef8 !important;
-  border: 1px solid rgba(17, 17, 17, 0.12) !important;
-  border-radius: 12px;
-  padding: 0.85rem;
+  background: #fff !important;
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  border-radius: 14px;
+  padding: 0.95rem 1rem;
   color: #111 !important;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+  box-shadow: none;
 
   h2, h3 {
     color: #111 !important;
   }
 
   small {
-    color: #555 !important;
+    color: #667085 !important;
   }
 }
 
@@ -1641,19 +1641,23 @@ $planner-line-height: 2rem;
 }
 
 .owner-planner-inbox {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 
   .owner-planner-inbox__head {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.65rem;
 
     h2 {
       margin: 0;
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       color: #111 !important;
     }
 
     small {
-      color: #555 !important;
+      display: block;
+      margin-top: 0.2rem;
+      color: #667085 !important;
+      font-size: 0.8rem;
+      line-height: 1.35;
     }
   }
 }
@@ -1661,21 +1665,27 @@ $planner-line-height: 2rem;
 .owner-planner-inbox-add {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.55rem;
 
   input {
     flex: 1;
     min-height: 2.4rem;
-    border: 1px solid rgba(17, 17, 17, 0.18);
-    border-radius: 8px;
-    padding: 0.45rem 0.7rem;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 10px;
+    padding: 0.45rem 0.75rem;
     font: inherit;
     font-size: 0.95rem;
     color: #111;
-    background: #fff;
+    background: #f8faf9;
 
     &::placeholder {
       color: #9ca3af;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: rgba(13, 107, 63, 0.45);
+      background: #fff;
     }
   }
 }
@@ -1684,21 +1694,47 @@ $planner-line-height: 2rem;
   list-style: none;
   margin: 0;
   padding: 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
 
-  li {
+  li,
+  .owner-planner-inbox-row {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0.55rem 0.35rem;
-    border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+    gap: 0.4rem;
+    padding: 0.45rem 0.15rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
     color: #111;
+    min-height: 2.6rem;
   }
 
   &__text {
     flex: 1;
-    font-size: 0.98rem;
+    min-width: 0;
+    font-size: 0.95rem;
     font-weight: 500;
     color: #111;
+    line-height: 1.35;
+  }
+}
+
+.owner-planner-done {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(13, 107, 63, 0.35);
+  background: #f3faf6;
+  color: #0d6b3f;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    background: #0d6b3f;
+    border-color: #0d6b3f;
+    color: #fff;
   }
 }
 
@@ -1726,13 +1762,13 @@ $planner-line-height: 2rem;
   }
 
   &--foot {
-    margin-top: 1.15rem;
-    padding: 0.95rem 1rem 1rem;
+    margin-top: 1rem;
+    padding: 0.85rem 1rem 0.95rem;
     border-top: 0;
     border-radius: 14px;
-    background: #fffef8;
-    border: 1px solid rgba(17, 17, 17, 0.1);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+    background: #f8faf9;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: none;
   }
 
   &__head {
@@ -1763,15 +1799,17 @@ $planner-line-height: 2rem;
   .owner-planner-long-term,
   .owner-planner-board--daily .owner-planner-sheet,
   .owner-planner-board--monthly .owner-planner-sheet {
-    background: #fffef8 !important;
+    background: #fff !important;
     color: #111 !important;
+    box-shadow: none !important;
+    border-color: rgba(15, 23, 42, 0.1) !important;
 
     h1, h2, h3, h4, strong, p, li, span, small, label {
       color: #111 !important;
     }
 
     small {
-      color: #555 !important;
+      color: #667085 !important;
     }
   }
 
@@ -1808,8 +1846,9 @@ $planner-line-height: 2rem;
   margin-bottom: 1rem;
   padding: 1rem 1.05rem;
   border-radius: 14px;
-  background: #fffef8;
-  border: 1px solid rgba(17, 17, 17, 0.1);
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: none;
 }
 
 .owner-planner-long-term__head {
@@ -1890,9 +1929,11 @@ $planner-line-height: 2rem;
     }
 
     .owner-planner-board--daily .owner-planner-sheet--daily {
-      padding: 0.45rem 0.2rem 0.55rem;
+      padding: 0.55rem 0.35rem 0.65rem;
       border-radius: 12px;
       overflow: hidden;
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      background: #fff;
     }
 
     .owner-planner-board--daily .owner-planner-sheet__title--daily {
@@ -1950,41 +1991,51 @@ $planner-line-height: 2rem;
     }
 
     .owner-planner-inbox {
-      padding: 0.85rem 0.75rem;
+      padding: 0.85rem 0.8rem;
       border-radius: 12px;
     }
 
     .owner-planner-inbox-add {
-      flex-direction: column;
+      flex-direction: row;
       align-items: stretch;
 
       input {
-        width: 100%;
-        min-height: 48px;
+        flex: 1;
+        min-width: 0;
+        min-height: 44px;
         font-size: 16px;
       }
 
       .btn {
-        width: 100%;
+        flex: 0 0 auto;
+        min-width: 5.5rem;
         min-height: 44px;
       }
     }
 
-    .owner-planner-inbox-list li {
-      flex-wrap: wrap;
-      gap: 0.45rem;
+    .owner-planner-inbox-list li,
+    .owner-planner-inbox-list .owner-planner-inbox-row {
+      flex-wrap: nowrap;
+      gap: 0.4rem;
       align-items: center;
+      padding: 0.5rem 0.1rem;
 
       .owner-planner-inbox-list__text {
-        flex: 1 1 calc(100% - 2rem);
+        flex: 1 1 auto;
         font-size: 0.95rem;
         line-height: 1.35;
       }
 
       .btn {
-        flex: 1 1 auto;
-        min-height: 40px;
+        flex: 0 0 auto;
+        min-height: 36px;
+        width: auto;
       }
+    }
+
+    .owner-planner-done {
+      width: 2rem;
+      height: 2rem;
     }
 
     .owner-planner-yearly-layout {

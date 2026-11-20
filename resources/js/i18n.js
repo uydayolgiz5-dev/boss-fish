@@ -2141,6 +2141,7 @@ const messages = {
         ownerPlannerNoTasksDay: 'Bu kunga hali ish yo‘q',
         ownerPlannerInboxTitle: 'Vazifalar (muddatsiz)',
         ownerPlannerInboxHint: 'Ish yozing — «Qilindi» bosilsa, Bugun/Ertaga jadvalidan pastdagi jurnalga tushadi.',
+        ownerPlannerInboxHintShort: 'Belgilanganda pastga — bajarilganlarga tushadi.',
         ownerPlannerInboxPlaceholder: 'Yangi vazifa...',
         ownerPlannerInboxEmpty: 'Bo‘sh katak — vazifa qo‘shing',
         ownerPlannerMarkDone: 'Qilindi',

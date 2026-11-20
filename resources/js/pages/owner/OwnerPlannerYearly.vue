@@ -21,13 +21,21 @@
         <div v-if="!activeLongTerm.length" class="owner-planner-daily-empty">{{ $t('ownerPlannerLongTermEmpty') }}</div>
 
         <ul v-else class="owner-planner-inbox-list">
-          <li v-for="task in activeLongTerm" :key="task.id">
+          <li v-for="task in activeLongTerm" :key="task.id" class="owner-planner-inbox-row">
+            <button
+              type="button"
+              class="owner-planner-done"
+              :aria-label="$t('ownerPlannerMarkDone')"
+              :title="$t('ownerPlannerMarkDone')"
+              @click="completeLongTerm(task)"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+            </button>
             <span class="owner-planner-daily-dot" :class="task.color ? `owner-planner-tone--${task.color}` : ''" />
             <span class="owner-planner-inbox-list__text">{{ task.text }}</span>
-            <button type="button" class="btn btn-outline btn-sm" @click="completeLongTerm(task)">
-              {{ $t('ownerPlannerMarkDone') }}
+            <button type="button" class="owner-planner-line-remove" :aria-label="$t('delete')" @click="removeLongTerm(task)">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
             </button>
-            <button type="button" class="owner-planner-line-remove" @click="removeLongTerm(task)"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </li>
         </ul>
 
