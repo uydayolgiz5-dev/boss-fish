@@ -330,6 +330,10 @@ export default {
       if (!form.region) form.region = c.region || '';
       if (!form.district) form.district = c.district || '';
       if (!form.address) form.address = c.address || '';
+      // Yangi natijada maydon bo‘sh bo‘lsa — mijozning ko‘l maydonidan default
+      if (!form.area_ha && c.pond_area_ha != null && Number(c.pond_area_ha) > 0) {
+        form.area_ha = String(c.pond_area_ha);
+      }
     }
 
     const controls = ref([]);

@@ -84,6 +84,7 @@ class VengerFeedPlanTest extends TestCase
             'phone' => '+998909998877',
             'region' => 'Samarqand',
             'district' => 'Samarqand shahri',
+            'pond_area_ha' => 6.5,
             'created_by' => $owner->id,
         ]);
 
@@ -94,15 +95,67 @@ class VengerFeedPlanTest extends TestCase
 
         $this->actingAs($owner, 'sanctum')
             ->postJson("/api/owner/venger/feed-plans/{$plan->id}/rows", [
-                'client_name' => 'Ali Valiyev',
+                'client_name' => 'Boshqa Ism',
                 'phone' => '+998909998877',
                 'venger_client_id' => $client->id,
                 'next_year_granule_kg' => 500,
             ])
             ->assertCreated()
-            ->assertJsonPath('venger_client_id', $client->id);
+            ->assertJsonPath('venger_client_id', $client->id)
+            ->assertJsonPath('pond_area_ha', 6.5);
 
         $this->assertSame(1, VengerClient::query()->count());
+        // Mijoz nomi reja qatoridan ustiga yozilmasligi kerak
+        $this->assertSame('Ali Valiyev', $client->fresh()->name);
+        $this->assertEquals(6.5, (float) $client->fresh()->pond_area_ha);
+    }
+
+    public function test_client_area_update_syncs_feed_plan_rows(): void
+    {
+        $owner = $this->owner();
+
+        $this->actingAs($owner, 'sanctum')
+            ->postJson('/api/owner/venger/clients', [
+                'first_name' => 'Akmal',
+                'last_name' => 'Karimov',
+                'region' => 'Andijon',
+                'district' => 'Andijon shahri',
+                'pond_area_ha' => 4,
+                'phone' => '+998888889999',
+            ])
+            ->assertCreated();
+
+        $client = VengerClient::query()->first();
+        $plan = VengerFeedPlan::query()->create(['year' => 2026, 'created_by' => $owner->id]);
+
+        $this->actingAs($owner, 'sanctum')
+            ->postJson("/api/owner/venger/feed-plans/{$plan->id}/rows", [
+                'client_name' => 'Akmal Karimov',
+                'phone' => '+998888889999',
+                'venger_client_id' => $client->id,
+                'next_year_extruder_kg' => 1000,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('pond_area_ha', 4);
+
+        $this->actingAs($owner, 'sanctum')
+            ->putJson("/api/owner/venger/clients/{$client->id}", [
+                'first_name' => 'Akmal',
+                'last_name' => 'Karimov',
+                'region' => 'Andijon',
+                'district' => 'Andijon shahri',
+                'pond_area_ha' => 6,
+                'phone' => '+998888889999',
+            ])
+            ->assertOk()
+            ->assertJsonPath('pond_area_ha', 6);
+
+        $this->assertEquals(6.0, (float) \App\Models\VengerFeedPlanRow::query()->value('pond_area_ha'));
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/owner/venger')
+            ->assertOk()
+            ->assertJsonPath('stats.area_ha', 6);
     }
 
     public function test_year_comparison_shows_growth_percent(): void

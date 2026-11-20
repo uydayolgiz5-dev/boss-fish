@@ -157,7 +157,25 @@ class VengerClientController extends Controller
             'name' => VengerClient::fullName($data['first_name'], $data['last_name']),
         ]);
 
-        return response()->json($this->clientDetailPayload($client->fresh()->loadCount('results')));
+        // Mijoz maydoni o‘zgarsa — bog‘langan yem reja qatorlariga ham yoziladi
+        if (array_key_exists('pond_area_ha', $data) && $data['pond_area_ha'] !== null) {
+            \App\Models\VengerFeedPlanRow::query()
+                ->where('venger_client_id', $client->id)
+                ->update(['pond_area_ha' => (float) $data['pond_area_ha']]);
+        }
+
+        // Identitet yangilansa — reja qatorlaridagi denormalizatsiya ham yangilanadi
+        \App\Models\VengerFeedPlanRow::query()
+            ->where('venger_client_id', $client->id)
+            ->update([
+                'client_name' => $client->name,
+                'phone' => $client->phone,
+                'phone2' => $client->phone2,
+                'region' => $client->region,
+                'district' => $client->district,
+            ]);
+
+        return response()->json($this->clientDetailPayload($client->fresh()->loadCount('results'), true));
     }
 
     public function destroy(Request $request, VengerClient $client): JsonResponse
@@ -601,11 +619,11 @@ class VengerClientController extends Controller
                 $stockedOn = optional($r->stocked_on)?->toDateString();
                 $soldOn = optional($r->sold_on)?->toDateString();
                 $season = $this->seasonLabel($stockedOn, $soldOn);
+                // Mavsum 2026/2027 → reja yili 2026 (solish yili). Aniq moslik, qo‘shib yubormaslik.
                 $startYear = $stockedOn ? (int) date('Y', strtotime($stockedOn)) : null;
-                $plan = null;
-                if ($startYear) {
-                    $plan = $planByYear[$startYear + 1] ?? $planByYear[$startYear] ?? null;
-                }
+                $plan = ($startYear && isset($planByYear[$startYear]))
+                    ? $planByYear[$startYear]
+                    : null;
 
                 $metrics = $r->metrics();
                 $feeds = collect($r->feeds ?? []);

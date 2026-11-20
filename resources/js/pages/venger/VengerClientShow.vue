@@ -8,6 +8,7 @@
         <p v-if="client" class="vcd-sub">
           {{ placeLine }}
           <template v-if="client.phone"> · {{ formatPhone(client.phone) }}</template>
+          <template v-if="client.phone2"> · {{ formatPhone(client.phone2) }}</template>
         </p>
         <p v-else>{{ $t('vengerClientWorkHint') }}</p>
       </div>
@@ -30,12 +31,12 @@
           <strong>{{ fmtHa(summary.pond_area_ha) }}</strong>
         </div>
         <div class="vcd-kpi">
-          <span>{{ $t('ownerVengerResultFeed') }}</span>
-          <strong>{{ fmtTon(summary.result_feed_kg) }}</strong>
+          <span>{{ $t('ownerVengerPlanFeed') }}</span>
+          <strong>{{ fmtTon(summary.plan_feed_kg) }}</strong>
         </div>
         <div class="vcd-kpi">
-          <span>{{ $t('vengerTotalGain') }}</span>
-          <strong>{{ fmtTon(summary.weight_gain_kg) }}</strong>
+          <span>{{ $t('ownerVengerResultFeed') }}</span>
+          <strong>{{ fmtTon(summary.result_feed_kg) }}</strong>
         </div>
         <div class="vcd-kpi vcd-kpi--focus">
           <span>{{ $t('vengerAvgFcr') }}</span>
@@ -392,6 +393,7 @@ export default {
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
+/* area · plan feed · result feed · FCR */
 .vcd-kpi {
   padding: 1rem 1.05rem;
   background: #fff;

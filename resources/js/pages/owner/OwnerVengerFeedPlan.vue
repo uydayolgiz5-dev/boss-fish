@@ -66,10 +66,10 @@
           <div class="vfp-totals__grid">
             <div><span>{{ $t('vengerFeedPlanTotalClients') }}</span><strong>{{ plan.totals.clients_count }}</strong></div>
             <div><span>{{ $t('vengerFeedPlanTotalArea') }}</span><strong>{{ fmtNum(plan.totals.pond_area_ha, 2) }}</strong></div>
-            <div><span>{{ $t('vengerFeedPlanTotalLastFeed') }}</span><strong>{{ fmtNum(plan.totals.last_year_feed_kg, 2) }}</strong></div>
+            <div><span>{{ $t('vengerFeedPlanTotalLastFeed') }}</span><strong>{{ fmtTon(plan.totals.last_year_feed_kg) }}</strong></div>
             <div><span>{{ $t('vengerFeedPlanTotalCarp') }}</span><strong>{{ fmtNum(plan.totals.next_year_carp_count, 0) }}</strong></div>
-            <div><span>{{ $t('vengerFeedPlanTotalExtruder') }}</span><strong>{{ fmtNum(plan.totals.next_year_extruder_kg, 2) }}</strong></div>
-            <div><span>{{ $t('vengerFeedPlanTotalGranule') }}</span><strong>{{ fmtNum(plan.totals.next_year_granule_kg, 2) }}</strong></div>
+            <div><span>{{ $t('vengerFeedPlanTotalExtruder') }}</span><strong>{{ fmtTon(plan.totals.next_year_extruder_kg) }}</strong></div>
+            <div><span>{{ $t('vengerFeedPlanTotalGranule') }}</span><strong>{{ fmtTon(plan.totals.next_year_granule_kg) }}</strong></div>
           </div>
         </section>
 
@@ -110,15 +110,15 @@
                     <span class="vfp-growth" :class="growthClass(row.growth.next_year_carp_count)">{{ growthLabel(row.growth.next_year_carp_count) }}</span>
                   </td>
                   <td class="num">
-                    {{ fmtNum(row.totals.next_year_extruder_kg, 2) }} t
+                    {{ fmtTon(row.totals.next_year_extruder_kg) }}
                     <span class="vfp-growth" :class="growthClass(row.growth.next_year_extruder_kg)">{{ growthLabel(row.growth.next_year_extruder_kg) }}</span>
                   </td>
                   <td class="num">
-                    {{ fmtNum(row.totals.next_year_granule_kg, 2) }} t
+                    {{ fmtTon(row.totals.next_year_granule_kg) }}
                     <span class="vfp-growth" :class="growthClass(row.growth.next_year_granule_kg)">{{ growthLabel(row.growth.next_year_granule_kg) }}</span>
                   </td>
                   <td class="num">
-                    {{ fmtNum((row.totals.next_year_extruder_kg || 0) + (row.totals.next_year_granule_kg || 0), 2) }} t
+                    {{ fmtTon((row.totals.next_year_extruder_kg || 0) + (row.totals.next_year_granule_kg || 0)) }}
                     <span class="vfp-growth" :class="growthClass(row.growth.total_feed_plan_t)">{{ growthLabel(row.growth.total_feed_plan_t) }}</span>
                   </td>
                 </tr>
@@ -419,6 +419,13 @@ export default {
       return formatNumber(v, { maxDecimals });
     }
 
+    /** DB da kg saqlanadi — ekranda tonna */
+    function fmtTon(kg) {
+      const n = Number(kg || 0);
+      if (!Number.isFinite(n) || n <= 0) return '0 t';
+      return `${fmtNum(n / 1000, 2)} t`;
+    }
+
     function numOrNull(v) {
       if (v === '' || v == null) return null;
       const n = Number(v);
@@ -491,6 +498,8 @@ export default {
       draft.phone2 = c.phone2 || '+998';
       draft.region = c.region || '';
       draft.district = c.district || '';
+      // Mijoz bazasidagi ko‘l maydoni — reja qatoriga ham tushadi
+      draft.pond_area_ha = c.pond_area_ha != null && c.pond_area_ha !== '' ? String(c.pond_area_ha) : '';
     }
 
     function resetDraft() {
@@ -714,6 +723,7 @@ export default {
       districtsFor,
       formatPhone,
       fmtNum,
+      fmtTon,
       numOrNull,
       intOrNull,
       selectPlan,

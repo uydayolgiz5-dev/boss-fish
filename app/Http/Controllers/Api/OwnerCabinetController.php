@@ -905,10 +905,13 @@ class OwnerCabinetController extends Controller
         $resultsByYear = array_values($resultYearBuckets);
 
         // Asosiy yillik statistika — yem rejasidan (har mijoz uchun yozilgan reja).
+        // Maydon: avvalo qator, bo‘sh bo‘lsa mijoz bazasidagi pond_area_ha.
         $feedPlans = \App\Models\VengerFeedPlan::query()
-            ->with('rows')
+            ->with(['rows.client:id,pond_area_ha'])
             ->orderBy('year')
             ->get();
+
+        $clientsAreaTotal = round((float) \App\Models\VengerClient::query()->sum('pond_area_ha'), 2);
 
         $yearsMap = [];
         foreach ($feedPlans as $plan) {
@@ -916,10 +919,17 @@ class OwnerCabinetController extends Controller
             $year = (int) $plan->year;
             $planExtruder = (float) $rows->sum('next_year_extruder_kg');
             $planGranula = (float) $rows->sum('next_year_granule_kg');
+            $areaHa = (float) $rows->sum(function ($row) {
+                if ($row->pond_area_ha !== null && (float) $row->pond_area_ha > 0) {
+                    return (float) $row->pond_area_ha;
+                }
+
+                return (float) ($row->client?->pond_area_ha ?? 0);
+            });
             $yearsMap[$year] = [
                 'year' => $year,
                 'clients_count' => $rows->count(),
-                'area_ha' => round((float) $rows->sum('pond_area_ha'), 2),
+                'area_ha' => round($areaHa, 2),
                 'fish_stocked' => (int) $rows->sum('next_year_carp_count'),
                 'plan_extruder_kg' => round($planExtruder, 1),
                 'plan_granula_kg' => round($planGranula, 1),
@@ -971,7 +981,15 @@ class OwnerCabinetController extends Controller
         $planFishTotal = (int) collect($yearsFlow)->sum('fish_stocked');
         $planAreaLatest = $latestPlanYear ? (float) $latestPlanYear['area_ha'] : 0.0;
         $planFishLatest = $latestPlanYear ? (int) $latestPlanYear['fish_stocked'] : 0;
+        $planFeedLatest = $latestPlanYear ? (float) $latestPlanYear['plan_feed_kg'] : 0.0;
+        $latestYear = $latestPlanYear ? (int) $latestPlanYear['year'] : null;
+        // Natija yemi: eng so‘nggi reja yili bilan bir xil kesimda (aralashtirmaslik)
+        $resultFeedLatest = $latestYear && isset($resultYearBuckets[$latestYear])
+            ? (float) $resultYearBuckets[$latestYear]['result_feed_kg']
+            : 0.0;
         $resultFeedTotal = round(array_sum($resultFeedValues), 1);
+        // Umumiy maydon — mijozlar bazasi (bir marta hisoblanadi, yillar bo‘yicha qo‘shilmaydi)
+        $areaHaStats = $clientsAreaTotal > 0 ? $clientsAreaTotal : $planAreaLatest;
 
         $avg = static function (array $values, int $decimals = 2): ?float {
             if ($values === []) {
@@ -1026,8 +1044,8 @@ class OwnerCabinetController extends Controller
                 'plan_extruder_kg' => $planExtruderTotal,
                 'plan_granula_kg' => $planGranulaTotal,
                 'fish_stocked' => $planFishTotal,
-                'area_ha' => $planAreaLatest,
-                // Alohida: natija qayt etilgan yem
+                'area_ha' => $areaHaStats,
+                // Alohida: natija qayt etilgan yem (barcha yillar jami)
                 'result_feed_kg' => $resultFeedTotal,
                 'result_extruder_kg' => round($resultFeedTypeKg['extruder'], 1),
                 'result_granula_kg' => round($resultFeedTypeKg['granula'], 1),
@@ -1053,10 +1071,12 @@ class OwnerCabinetController extends Controller
                 'ponds_open' => $openCount,
                 'ponds_final' => $finalCount,
                 'ponds_total' => $openCount + $finalCount,
-                'area_ha' => $planAreaLatest,
+                // Yuqori KPI: mijoz maydoni + eng so‘nggi reja yili (reja/natija bir kesim)
+                'area_ha' => $areaHaStats,
                 'fish_stocked' => $planFishLatest,
-                'plan_feed_kg' => $latestPlanYear ? (float) $latestPlanYear['plan_feed_kg'] : 0.0,
-                'result_feed_kg' => $resultFeedTotal,
+                'plan_feed_kg' => $planFeedLatest,
+                'result_feed_kg' => $resultFeedLatest,
+                'latest_plan_year' => $latestYear,
             ],
             'analytics' => $analytics,
             'staff' => $staff,

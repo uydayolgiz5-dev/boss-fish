@@ -18,7 +18,7 @@ class VengerFeedPlanController extends Controller
     public function index(): JsonResponse
     {
         $plans = VengerFeedPlan::query()
-            ->with('rows')
+            ->with(['rows.client:id,name,phone,phone2,pond_area_ha,region,district'])
             ->orderBy('year')
             ->get();
 
@@ -85,7 +85,7 @@ class VengerFeedPlanController extends Controller
 
     public function show(VengerFeedPlan $plan): JsonResponse
     {
-        $plan->load(['rows.client:id,name,first_name,last_name,phone,region,district']);
+        $plan->load(['rows.client:id,name,first_name,last_name,phone,phone2,pond_area_ha,region,district']);
 
         return response()->json($this->planDetailPayload($plan));
     }
@@ -113,11 +113,18 @@ class VengerFeedPlanController extends Controller
     {
         $data = $this->validateRow($request);
         $client = $this->resolveClient($request, $data);
+        $attrs = $this->rowAttributes($data);
+
+        // Rejada maydon bo‘sh qolsa — mijoz bazasidagi ko‘l maydonidan olamiz
+        if ((! array_key_exists('pond_area_ha', $attrs) || $attrs['pond_area_ha'] === null)
+            && $client->pond_area_ha !== null) {
+            $attrs['pond_area_ha'] = (float) $client->pond_area_ha;
+        }
 
         $maxSort = (int) $plan->rows()->max('sort_order');
 
         $row = $plan->rows()->create([
-            ...$this->rowAttributes($data),
+            ...$attrs,
             'venger_client_id' => $client->id,
             'sort_order' => $maxSort + 1,
         ]);
@@ -131,12 +138,29 @@ class VengerFeedPlanController extends Controller
         $data = $this->validateRow($request, partial: true);
         $attrs = $this->rowAttributes($data);
 
-        if (isset($data['client_name']) || isset($data['phone']) || array_key_exists('region', $data) || array_key_exists('district', $data)) {
+        $shouldResolveClient = isset($data['client_name'])
+            || isset($data['phone'])
+            || array_key_exists('phone2', $data)
+            || array_key_exists('region', $data)
+            || array_key_exists('district', $data)
+            || array_key_exists('pond_area_ha', $data)
+            || array_key_exists('location_text', $data)
+            || array_key_exists('venger_client_id', $data);
+
+        if ($shouldResolveClient) {
             $merged = array_merge($row->only([
-                'client_name', 'phone', 'location_text', 'region', 'district',
+                'client_name', 'phone', 'phone2', 'location_text', 'region', 'district', 'pond_area_ha',
             ]), $attrs);
+            if (! empty($row->venger_client_id) && empty($merged['venger_client_id'])) {
+                $merged['venger_client_id'] = $row->venger_client_id;
+            }
             $client = $this->resolveClient($request, $merged, $row->venger_client_id);
             $attrs['venger_client_id'] = $client->id;
+            // Qatorda bo‘sh maydon qolsa — mijoz bazasidagi maydon bilan to‘ldiramiz
+            if ((! array_key_exists('pond_area_ha', $attrs) || $attrs['pond_area_ha'] === null)
+                && $client->pond_area_ha !== null) {
+                $attrs['pond_area_ha'] = (float) $client->pond_area_ha;
+            }
         }
 
         $row->update($attrs);
@@ -274,35 +298,52 @@ class VengerFeedPlanController extends Controller
     }
 
     /**
+     * Mijoz bazasini reja qatoridan to‘ldirish — faqat bo‘sh maydonlar.
+     * To‘ldirilgan mijoz ma’lumotini reja qatori bilan ustiga yozib yubormaydi.
+     *
      * @param  array<string, mixed>  $data
      */
     private function syncClientFromRow(VengerClient $client, array $data): void
     {
         $updates = [];
+
         if (! empty($data['client_name'])) {
-            [$first, $last] = $this->splitName((string) $data['client_name']);
-            $updates['first_name'] = $first;
-            $updates['last_name'] = $last;
-            $updates['name'] = VengerClient::fullName($first, $last);
+            $incoming = trim((string) $data['client_name']);
+            $current = trim((string) $client->name);
+            if ($current === '' || strcasecmp($current, 'Mijoz') === 0) {
+                [$first, $last] = $this->splitName($incoming);
+                $updates['first_name'] = $first;
+                $updates['last_name'] = $last;
+                $updates['name'] = VengerClient::fullName($first, $last);
+            }
         }
-        if (! empty($data['phone'])) {
+
+        if (! empty($data['phone']) && trim((string) $client->phone) === '') {
             $updates['phone'] = $data['phone'];
         }
-        if (array_key_exists('phone2', $data)) {
-            $updates['phone2'] = $data['phone2'] ?: null;
+
+        if (array_key_exists('phone2', $data) && empty($client->phone2) && ! empty($data['phone2'])) {
+            $updates['phone2'] = $data['phone2'];
         }
-        if (array_key_exists('location_text', $data) && $data['location_text']) {
+
+        if (array_key_exists('location_text', $data) && $data['location_text'] && empty($client->address)) {
             $updates['address'] = $data['location_text'];
         }
-        if (! empty($data['region'])) {
+
+        if (! empty($data['region']) && empty($client->region)) {
             $updates['region'] = $data['region'];
         }
-        if (! empty($data['district'])) {
+
+        if (! empty($data['district']) && empty($client->district)) {
             $updates['district'] = $data['district'];
         }
+
+        // Ko‘l maydoni: mijozda yo‘q bo‘lsa rejadagi qiymat bilan to‘ldiriladi;
+        // mijozda bor bo‘lsa — reja qatori o‘zgartirilganda ham yangilanadi (bir manba).
         if (isset($data['pond_area_ha']) && $data['pond_area_ha'] !== null && $data['pond_area_ha'] !== '') {
             $updates['pond_area_ha'] = (float) $data['pond_area_ha'];
         }
+
         if ($updates) {
             $client->update($updates);
         }
@@ -386,9 +427,20 @@ class VengerFeedPlanController extends Controller
      */
     private function planTotals($rows): array
     {
+        $area = $rows->sum(function (VengerFeedPlanRow $row) {
+            if ($row->pond_area_ha !== null && (float) $row->pond_area_ha > 0) {
+                return (float) $row->pond_area_ha;
+            }
+            if ($row->relationLoaded('client') && $row->client && $row->client->pond_area_ha !== null) {
+                return (float) $row->client->pond_area_ha;
+            }
+
+            return 0.0;
+        });
+
         return [
             'clients_count' => $rows->count(),
-            'pond_area_ha' => round((float) $rows->sum('pond_area_ha'), 3),
+            'pond_area_ha' => round((float) $area, 3),
             'last_year_feed_kg' => round((float) $rows->sum('last_year_feed_kg'), 2),
             'next_year_carp_count' => (int) $rows->sum('next_year_carp_count'),
             'next_year_extruder_kg' => round((float) $rows->sum('next_year_extruder_kg'), 2),
@@ -423,7 +475,7 @@ class VengerFeedPlanController extends Controller
             'location_text' => $row->location_text,
             'region' => $row->region,
             'district' => $row->district,
-            'pond_area_ha' => $row->pond_area_ha,
+            'pond_area_ha' => $this->effectiveRowArea($row),
             'last_year_feed_kg' => $row->last_year_feed_kg,
             'rating_10' => $row->rating_10,
             'feedback' => $row->feedback,
@@ -435,7 +487,24 @@ class VengerFeedPlanController extends Controller
                 'name' => $row->client->name,
                 'phone' => $row->client->phone,
                 'phone2' => $row->client->phone2,
+                'pond_area_ha' => $row->client->pond_area_ha !== null
+                    ? round((float) $row->client->pond_area_ha, 3)
+                    : null,
+                'region' => $row->client->region,
+                'district' => $row->client->district,
             ] : null,
         ];
+    }
+
+    private function effectiveRowArea(VengerFeedPlanRow $row): ?float
+    {
+        if ($row->pond_area_ha !== null && (float) $row->pond_area_ha > 0) {
+            return round((float) $row->pond_area_ha, 3);
+        }
+        if ($row->relationLoaded('client') && $row->client && $row->client->pond_area_ha !== null) {
+            return round((float) $row->client->pond_area_ha, 3);
+        }
+
+        return $row->pond_area_ha !== null ? round((float) $row->pond_area_ha, 3) : null;
     }
 }

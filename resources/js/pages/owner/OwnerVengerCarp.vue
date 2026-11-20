@@ -34,12 +34,12 @@
         <div class="ov-kpi ov-kpi--plan">
           <span>{{ $t('ownerVengerPlanFeed') }}</span>
           <strong>{{ fmtTon(stats.plan_feed_kg ?? analytics.totals?.plan_feed_kg) }}</strong>
-          <small>{{ $t('ownerVengerFromFeedPlan') }}</small>
+          <small>{{ stats.latest_plan_year ? `${stats.latest_plan_year}` : $t('ownerVengerFromFeedPlan') }}</small>
         </div>
         <div class="ov-kpi ov-kpi--result">
           <span>{{ $t('ownerVengerResultFeed') }}</span>
           <strong>{{ fmtTon(stats.result_feed_kg ?? analytics.totals?.result_feed_kg) }}</strong>
-          <small>{{ $t('ownerVengerFromResults') }}</small>
+          <small>{{ stats.latest_plan_year ? `${stats.latest_plan_year}` : $t('ownerVengerFromResults') }}</small>
         </div>
       </section>
 
