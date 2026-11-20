@@ -928,21 +928,16 @@ export default {
         : t('vengerGnValG', { n: g });
     }
 
-    /** Boqish sanalariga qarab mavsum: 2026 yoki 2025/2026 */
+    /** Yillik mavsum: 2026/2027 */
     function seasonFromDates(startRaw, endRaw) {
       const yearOf = (v) => {
         if (!v) return null;
         const d = new Date(v);
         return Number.isNaN(d.getTime()) ? null : d.getFullYear();
       };
-      const y1 = yearOf(startRaw);
-      const y2 = yearOf(endRaw) || y1;
-      if (!y1 && !y2) return '';
-      if (!y1) return t('vengerGnSeasonYear', { y: y2 });
-      if (!y2 || y1 === y2) return t('vengerGnSeasonYear', { y: y1 });
-      const a = Math.min(y1, y2);
-      const b = Math.max(y1, y2);
-      return t('vengerGnSeasonSpan', { a, b });
+      const y1 = yearOf(startRaw) || yearOf(endRaw);
+      if (!y1) return '';
+      return t('vengerGnSeasonSpan', { a: y1, b: y1 + 1 });
     }
 
     function buildGoodNewsPayload() {

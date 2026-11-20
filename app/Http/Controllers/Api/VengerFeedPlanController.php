@@ -267,6 +267,7 @@ class VengerFeedPlanController extends Controller
             'address' => $data['location_text'] ?? null,
             'region' => $region,
             'district' => $district,
+            'pond_area_ha' => isset($data['pond_area_ha']) ? (float) $data['pond_area_ha'] : null,
             'notes' => null,
             'created_by' => $request->user()?->id,
         ]);
@@ -298,6 +299,9 @@ class VengerFeedPlanController extends Controller
         }
         if (! empty($data['district'])) {
             $updates['district'] = $data['district'];
+        }
+        if (isset($data['pond_area_ha']) && $data['pond_area_ha'] !== null && $data['pond_area_ha'] !== '') {
+            $updates['pond_area_ha'] = (float) $data['pond_area_ha'];
         }
         if ($updates) {
             $client->update($updates);

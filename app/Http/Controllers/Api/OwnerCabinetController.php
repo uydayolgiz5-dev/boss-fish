@@ -757,6 +757,7 @@ class OwnerCabinetController extends Controller
                 'address' => $c->address,
                 'region' => $c->region,
                 'district' => $c->district,
+                'pond_area_ha' => $c->pond_area_ha !== null ? round((float) $c->pond_area_ha, 3) : null,
                 'results_count' => (int) $c->results_count,
                 'staff' => $c->creator ? [
                     'id' => $c->creator->id,

@@ -33,13 +33,15 @@ class VengerClientsTest extends TestCase
                 'last_name' => 'Karimov',
                 'region' => 'Andijon',
                 'district' => 'Andijon shahri',
+                'pond_area_ha' => 5,
                 'address' => 'Mahalla 12',
                 'phone' => '+998901112233',
             ])
             ->assertCreated()
             ->assertJsonPath('name', 'Akmal Karimov')
             ->assertJsonPath('region', 'Andijon')
-            ->assertJsonPath('district', 'Andijon shahri');
+            ->assertJsonPath('district', 'Andijon shahri')
+            ->assertJsonPath('pond_area_ha', 5);
 
         $this->actingAs($staff, 'sanctum')
             ->postJson('/api/venger/clients', [
@@ -128,6 +130,7 @@ class VengerClientsTest extends TestCase
                 'last_name' => 'Aliyev',
                 'region' => 'Andijon',
                 'district' => 'Andijon shahri',
+                'pond_area_ha' => 1.5,
                 'phone' => '+998901112266',
             ])
             ->assertCreated();
@@ -170,6 +173,7 @@ class VengerClientsTest extends TestCase
                 'last_name' => 'Bek',
                 'region' => 'Andijon',
                 'district' => 'Andijon shahri',
+                'pond_area_ha' => 2,
                 'phone' => '+998901112277',
             ])
             ->assertCreated();
@@ -216,6 +220,7 @@ class VengerClientsTest extends TestCase
                 'last_name' => 'Nurmatov',
                 'region' => 'Andijon',
                 'district' => 'Andijon shahri',
+                'pond_area_ha' => 1.5,
                 'phone' => '+998901112255',
             ])
             ->assertCreated();
@@ -260,6 +265,7 @@ class VengerClientsTest extends TestCase
                 'last_name' => 'Yem',
                 'region' => 'Andijon',
                 'district' => 'Andijon shahri',
+                'pond_area_ha' => 2,
                 'phone' => '+998901112288',
             ])
             ->assertCreated();

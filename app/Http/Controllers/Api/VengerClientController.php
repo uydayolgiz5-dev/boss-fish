@@ -255,6 +255,7 @@ class VengerClientController extends Controller
             'address' => 'nullable|string|max:500',
             'region' => ['required', 'string', Rule::in(Regions::all())],
             'district' => 'required|string|max:120',
+            'pond_area_ha' => 'required|numeric|min:0.001|max:999999',
             'phone' => [
                 'required',
                 'string',
@@ -537,6 +538,7 @@ class VengerClientController extends Controller
             'address' => $client->address,
             'region' => $client->region,
             'district' => $client->district,
+            'pond_area_ha' => $client->pond_area_ha !== null ? round((float) $client->pond_area_ha, 3) : null,
             'phone' => $client->phone,
             'phone2' => $client->phone2,
             'notes' => $client->notes,
@@ -565,6 +567,7 @@ class VengerClientController extends Controller
             'address' => $client->address,
             'region' => $client->region,
             'district' => $client->district,
+            'pond_area_ha' => $client->pond_area_ha !== null ? round((float) $client->pond_area_ha, 3) : null,
             'phone' => $client->phone,
             'phone2' => $client->phone2,
             'notes' => $client->notes,
@@ -575,24 +578,30 @@ class VengerClientController extends Controller
 
         if ($withResults) {
             $client->loadMissing(['results.fish']);
-            $payload['results'] = $client->results->map(fn (VengerResult $r) => [
-                'id' => $r->id,
-                'title' => $r->title,
-                'status' => $r->status,
-                'area_ha' => $r->area_ha,
-                'region' => $r->region,
-                'district' => $r->district,
-                'address' => $r->address,
-                'stocked_on' => optional($r->stocked_on)?->toDateString(),
-                'sold_on' => optional($r->sold_on)?->toDateString(),
-                'stocked_pieces' => $r->stocked_pieces,
-                'sold_pieces' => $r->sold_pieces,
-                'feed_kg' => $r->feed_kg,
-                'feeds' => $r->feeds ?? [],
-                'sold_weight_kg' => $r->sold_weight_kg,
-                'fish_types' => $r->fish->pluck('fish_type')->values(),
-                'metrics' => $r->metrics(),
-            ])->values();
+            $payload['results'] = $client->results->map(function (VengerResult $r) {
+                $stockedOn = optional($r->stocked_on)?->toDateString();
+                $soldOn = optional($r->sold_on)?->toDateString();
+
+                return [
+                    'id' => $r->id,
+                    'title' => $r->title,
+                    'status' => $r->status,
+                    'area_ha' => $r->area_ha,
+                    'region' => $r->region,
+                    'district' => $r->district,
+                    'address' => $r->address,
+                    'stocked_on' => $stockedOn,
+                    'sold_on' => $soldOn,
+                    'season' => $this->seasonLabel($stockedOn, $soldOn),
+                    'stocked_pieces' => $r->stocked_pieces,
+                    'sold_pieces' => $r->sold_pieces,
+                    'feed_kg' => $r->feed_kg,
+                    'feeds' => $r->feeds ?? [],
+                    'sold_weight_kg' => $r->sold_weight_kg,
+                    'fish_types' => $r->fish->pluck('fish_type')->values(),
+                    'metrics' => $r->metrics(),
+                ];
+            })->values();
         }
 
         return $payload;
@@ -646,12 +655,40 @@ class VengerClientController extends Controller
                 'address' => $result->client->address,
                 'region' => $result->client->region,
                 'district' => $result->client->district,
+                'pond_area_ha' => $result->client->pond_area_ha !== null
+                    ? round((float) $result->client->pond_area_ha, 3)
+                    : null,
                 'phone' => $result->client->phone,
+                'phone2' => $result->client->phone2,
             ] : null,
+            'season' => $this->seasonLabel(
+                $metrics['stocked_on'] ?? optional($result->stocked_on)?->toDateString(),
+                $metrics['sold_on'] ?? optional($result->sold_on)?->toDateString(),
+            ),
             'metrics' => $metrics,
             'created_at' => optional($result->created_at)?->toIso8601String(),
             'updated_at' => optional($result->updated_at)?->toIso8601String(),
         ];
+    }
+
+    private function seasonLabel(?string $stockedOn, ?string $soldOn): ?string
+    {
+        $yearOf = static function (?string $value): ?int {
+            if (! $value) {
+                return null;
+            }
+            $ts = strtotime($value);
+
+            return $ts ? (int) date('Y', $ts) : null;
+        };
+
+        $start = $yearOf($stockedOn) ?? $yearOf($soldOn);
+        if (! $start) {
+            return null;
+        }
+
+        // Yillik mavsum: 2026/2027
+        return $start.'/'.($start + 1);
     }
 }
 

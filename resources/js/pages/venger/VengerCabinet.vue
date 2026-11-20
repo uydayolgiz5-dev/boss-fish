@@ -42,6 +42,7 @@
           <article v-for="c in clients" :key="`m-${c.id}`" class="venger-mcard">
             <strong class="venger-mcard__name">{{ c.name }}</strong>
             <p class="venger-mcard__line">{{ c.region || '—' }}<template v-if="c.district"> · {{ c.district }}</template></p>
+            <p class="venger-mcard__line">{{ $t('vengerPondAreaHa') }}: <strong>{{ fmtArea(c.pond_area_ha) }}</strong></p>
             <p class="venger-mcard__line mono">{{ formatPhone(c.phone) }}</p>
             <p v-if="c.phone2" class="venger-mcard__line mono">{{ formatPhone(c.phone2) }}</p>
             <p v-if="isOwnerView" class="venger-mcard__line">{{ c.staff?.name || '—' }}</p>
@@ -56,6 +57,7 @@
                 <th>{{ $t('fullName') }}</th>
                 <th>{{ $t('region') }}</th>
                 <th>{{ $t('district') }}</th>
+                <th class="num">{{ $t('vengerPondAreaHa') }}</th>
                 <th>{{ $t('phone') }}</th>
                 <th v-if="isOwnerView">{{ $t('vengerStaff') }}</th>
                 <th></th>
@@ -66,6 +68,7 @@
                 <td><strong>{{ c.name }}</strong></td>
                 <td>{{ c.region || '—' }}</td>
                 <td>{{ c.district || '—' }}</td>
+                <td class="num"><strong>{{ fmtArea(c.pond_area_ha) }}</strong></td>
                 <td class="mono">
                   {{ formatPhone(c.phone) }}
                   <template v-if="c.phone2"><br>{{ formatPhone(c.phone2) }}</template>
@@ -78,7 +81,7 @@
                 </td>
               </tr>
               <tr v-if="!clients.length">
-                <td :colspan="isOwnerView ? 6 : 5" class="empty">{{ searchActive ? $t('vengerSearchEmpty') : $t('noVengerClients') }}</td>
+                <td :colspan="isOwnerView ? 7 : 6" class="empty">{{ searchActive ? $t('vengerSearchEmpty') : $t('noVengerClients') }}</td>
               </tr>
             </tbody>
           </table>
@@ -105,6 +108,11 @@
             @update:region="form.region = $event"
             @update:district="form.district = $event"
           />
+          <div class="field">
+            <label>{{ $t('vengerPondAreaHa') }} <span class="req">*</span></label>
+            <FormattedNumberInput v-model="form.pond_area_ha" :max-decimals="3" required />
+            <p class="field-hint">{{ $t('vengerPondAreaHaHint') }}</p>
+          </div>
           <div class="field">
             <label>{{ $t('address') }}</label>
             <input v-model="form.address" maxlength="500" :placeholder="$t('addressDetailPlaceholder')" />
@@ -136,6 +144,7 @@
 <script>
 import { computed, onMounted, reactive, ref } from 'vue';
 import PhoneInput from '../../components/PhoneInput.vue';
+import FormattedNumberInput from '../../components/FormattedNumberInput.vue';
 import RegionDistrictPicker from '../../components/RegionDistrictPicker.vue';
 import OwnerVengerNav from '../../components/OwnerVengerNav.vue';
 import auth from '../../auth';
@@ -149,13 +158,14 @@ const emptyForm = () => ({
   address: '',
   region: '',
   district: '',
+  pond_area_ha: '',
   phone: '+998',
   phone2: '+998',
   notes: '',
 });
 
 export default {
-  components: { PhoneInput, RegionDistrictPicker, OwnerVengerNav },
+  components: { PhoneInput, FormattedNumberInput, RegionDistrictPicker, OwnerVengerNav },
   setup() {
     const loading = ref(true);
     const error = ref('');
@@ -182,6 +192,12 @@ export default {
 
     function formatPhone(phone) {
       return formatPhoneDisplay(phone || '');
+    }
+
+    function fmtArea(v) {
+      const n = Number(v);
+      if (!Number.isFinite(n) || n <= 0) return '—';
+      return `${n.toLocaleString(undefined, { maximumFractionDigits: 3 })} ha`;
     }
 
     async function load() {
@@ -226,6 +242,11 @@ export default {
         formError.value = t('districtRequired');
         return;
       }
+      const pondArea = Number(form.pond_area_ha);
+      if (!Number.isFinite(pondArea) || pondArea <= 0) {
+        formError.value = t('vengerPondAreaRequired');
+        return;
+      }
       if (!isCompletePhone(form.phone)) {
         formError.value = t('phoneIncompleteFull');
         return;
@@ -242,6 +263,7 @@ export default {
           address: form.address || null,
           region: form.region,
           district: form.district,
+          pond_area_ha: pondArea,
           phone: form.phone,
           phone2,
           notes: form.notes || null,
@@ -259,7 +281,7 @@ export default {
     return {
       loading, error, formError, clients, stats, modal, form,
       searchQ, searchRegion, regions, filteredCount, searchActive, isOwnerView,
-      formatPhone, clientRoute, openCreate, save, load, onSearchInput,
+      formatPhone, fmtArea, clientRoute, openCreate, save, load, onSearchInput,
     };
   },
 };
@@ -270,6 +292,7 @@ export default {
 .venger-search__grid {
   grid-template-columns: 1.6fr 1fr;
 }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 720px) {
   .venger-search__grid { grid-template-columns: 1fr; }
 }

@@ -15,11 +15,19 @@ class VengerClient extends Model
         'address',
         'region',
         'district',
+        'pond_area_ha',
         'phone',
         'phone2',
         'notes',
         'created_by',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'pond_area_ha' => 'float',
+        ];
+    }
 
     public static function fullName(string $firstName, string $lastName): string
     {
